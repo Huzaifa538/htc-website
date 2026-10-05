@@ -1,0 +1,1 @@
+{"fieldOverrides":[],"indexes":[{"collectionGroup":"notifications","fields":[{"fieldPath":"userId","order":"ASCENDING"},{"fieldPath":"createdAt","order":"DESCENDING"}],"queryScope":"COLLECTION"},{"collectionGroup":"galleryVideos","fields":[{"fieldPath":"enabled","order":"ASCENDING"},{"fieldPath":"order","order":"ASCENDING"}],"queryScope":"COLLECTION"}]}

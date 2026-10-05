@@ -1,0 +1,694 @@
+{
+  "exportedAt": "2026-10-02T15:01:24.172Z",
+  "projectId": "htc-website-d19cb",
+  "collections": {
+    "categories": [
+      {
+        "id": "doors",
+        "name": "Doors",
+        "slug": "doors",
+        "image": "https://picsum.photos/seed/htc-cat-doors/1200/800",
+        "icon": "DoorOpen",
+        "order": 1,
+        "enabled": true,
+        "createdAt": "2026-10-02T15:01:24.171Z"
+      },
+      {
+        "id": "furniture",
+        "name": "Furniture",
+        "slug": "furniture",
+        "image": "https://picsum.photos/seed/htc-cat-furniture/1200/800",
+        "icon": "Sofa",
+        "order": 2,
+        "enabled": true,
+        "createdAt": "2026-10-02T15:01:24.171Z"
+      },
+      {
+        "id": "interior",
+        "name": "Interior Decor",
+        "slug": "interior-decor",
+        "image": "https://picsum.photos/seed/htc-cat-interior/1200/800",
+        "icon": "Lamp",
+        "order": 3,
+        "enabled": true,
+        "createdAt": "2026-10-02T15:01:24.171Z"
+      },
+      {
+        "id": "wooden-doors",
+        "name": "Wooden Doors",
+        "slug": "wooden-doors",
+        "image": "https://picsum.photos/seed/htc-cat-wooden-doors/1200/800",
+        "icon": "DoorClosed",
+        "parentId": "doors",
+        "order": 4,
+        "enabled": true,
+        "createdAt": "2026-10-02T15:01:24.171Z"
+      },
+      {
+        "id": "steel-doors",
+        "name": "Steel Doors",
+        "slug": "steel-doors",
+        "image": "https://picsum.photos/seed/htc-cat-steel-doors/1200/800",
+        "icon": "ShieldCheck",
+        "parentId": "doors",
+        "order": 5,
+        "enabled": true,
+        "createdAt": "2026-10-02T15:01:24.171Z"
+      }
+    ],
+    "products": [
+      {
+        "id": "wooden-door-classic",
+        "name": "Classic Solid Wooden Door",
+        "slug": "classic-solid-wooden-door",
+        "description": "Premium solid-wood main door handcrafted by HTC carpenters. Seasoned timber, termite-treated, with a rich polished finish that lasts for years. Installation included in major cities.",
+        "shortDescription": "Handcrafted solid-wood main door in 3 finishes, 2 sizes.",
+        "categoryId": "wooden-doors",
+        "images": [
+          "https://picsum.photos/seed/htc-door-1/1200/800",
+          "https://picsum.photos/seed/htc-door-2/1200/800",
+          "https://picsum.photos/seed/htc-door-3/1200/800"
+        ],
+        "variantTypes": [
+          {
+            "id": "size",
+            "name": "Size",
+            "kind": "size",
+            "values": [
+              "36\"",
+              "42\""
+            ]
+          },
+          {
+            "id": "color",
+            "name": "Finish",
+            "kind": "color",
+            "values": [
+              "Walnut",
+              "Oak",
+              "Mahogany"
+            ],
+            "colors": {
+              "Walnut": "#5C4033",
+              "Oak": "#C19A6B",
+              "Mahogany": "#4E2728"
+            }
+          }
+        ],
+        "combinations": [
+          {
+            "id": "door-36in-walnut",
+            "options": {
+              "Size": "36\"",
+              "Finish": "Walnut"
+            },
+            "price": 45000,
+            "compareAtPrice": 51750,
+            "stock": 12,
+            "sku": "HTC-WD-36IN-WAL",
+            "image": "https://picsum.photos/seed/htc-door-walnut/1200/800"
+          },
+          {
+            "id": "door-36in-oak",
+            "options": {
+              "Size": "36\"",
+              "Finish": "Oak"
+            },
+            "price": 42000,
+            "compareAtPrice": 48300,
+            "stock": 8,
+            "sku": "HTC-WD-36IN-OAK",
+            "image": "https://picsum.photos/seed/htc-door-oak/1200/800"
+          },
+          {
+            "id": "door-36in-mahogany",
+            "options": {
+              "Size": "36\"",
+              "Finish": "Mahogany"
+            },
+            "price": 48000,
+            "compareAtPrice": 55200,
+            "stock": 5,
+            "sku": "HTC-WD-36IN-MAH",
+            "image": "https://picsum.photos/seed/htc-door-mahogany/1200/800"
+          },
+          {
+            "id": "door-42in-walnut",
+            "options": {
+              "Size": "42\"",
+              "Finish": "Walnut"
+            },
+            "price": 52000,
+            "compareAtPrice": 59800,
+            "stock": 9,
+            "sku": "HTC-WD-42IN-WAL",
+            "image": "https://picsum.photos/seed/htc-door-walnut/1200/800"
+          },
+          {
+            "id": "door-42in-oak",
+            "options": {
+              "Size": "42\"",
+              "Finish": "Oak"
+            },
+            "price": 49000,
+            "compareAtPrice": 56350,
+            "stock": 6,
+            "sku": "HTC-WD-42IN-OAK",
+            "image": "https://picsum.photos/seed/htc-door-oak/1200/800"
+          },
+          {
+            "id": "door-42in-mahogany",
+            "options": {
+              "Size": "42\"",
+              "Finish": "Mahogany"
+            },
+            "price": 55000,
+            "compareAtPrice": 63250,
+            "stock": 4,
+            "sku": "HTC-WD-42IN-MAH",
+            "image": "https://picsum.photos/seed/htc-door-mahogany/1200/800"
+          }
+        ],
+        "basePrice": 42000,
+        "baseCompareAtPrice": 48300,
+        "baseStock": 44,
+        "sku": "HTC-WD-CLASSIC",
+        "tags": [
+          "door",
+          "wooden",
+          "main door",
+          "handcrafted"
+        ],
+        "featured": true,
+        "published": true,
+        "rating": 4.7,
+        "reviewCount": 23,
+        "soldCount": 86,
+        "createdAt": "2026-10-02T15:01:24.171Z",
+        "updatedAt": "2026-10-02T15:01:24.171Z"
+      },
+      {
+        "id": "steel-security-door",
+        "name": "Heavy-Duty Steel Security Door",
+        "slug": "heavy-duty-steel-security-door",
+        "description": "Galvanized steel security door with multi-point locking system. Rust-proof coating, reinforced frame, and a 5-year warranty against manufacturing defects.",
+        "shortDescription": "Galvanized steel security door with multi-point lock.",
+        "categoryId": "steel-doors",
+        "images": [
+          "https://picsum.photos/seed/htc-steel-door-1/1200/800",
+          "https://picsum.photos/seed/htc-steel-door-2/1200/800"
+        ],
+        "variantTypes": [
+          {
+            "id": "size",
+            "name": "Size",
+            "kind": "size",
+            "values": [
+              "36\"",
+              "42\""
+            ]
+          }
+        ],
+        "combinations": [
+          {
+            "id": "steel-36",
+            "options": {
+              "Size": "36\""
+            },
+            "price": 38000,
+            "compareAtPrice": 42000,
+            "stock": 15,
+            "sku": "HTC-SD-36IN",
+            "image": "https://picsum.photos/seed/htc-steel-door-1/1200/800"
+          },
+          {
+            "id": "steel-42",
+            "options": {
+              "Size": "42\""
+            },
+            "price": 44000,
+            "stock": 10,
+            "sku": "HTC-SD-42IN",
+            "image": "https://picsum.photos/seed/htc-steel-door-2/1200/800"
+          }
+        ],
+        "basePrice": 38000,
+        "baseCompareAtPrice": 42000,
+        "baseStock": 25,
+        "sku": "HTC-SD-HEAVY",
+        "tags": [
+          "door",
+          "steel",
+          "security"
+        ],
+        "featured": true,
+        "published": true,
+        "rating": 4.5,
+        "reviewCount": 14,
+        "soldCount": 52,
+        "createdAt": "2026-10-02T15:01:24.171Z",
+        "updatedAt": "2026-10-02T15:01:24.171Z"
+      },
+      {
+        "id": "sofa-set-5-seater",
+        "name": "Royal 5-Seater Fabric Sofa Set",
+        "slug": "royal-5-seater-fabric-sofa-set",
+        "description": "Comfortable 5-seater sofa set with solid wood frame, high-density foam, and premium washable fabric. A centrepiece for any living room.",
+        "shortDescription": "5-seater fabric sofa set in 3 colours.",
+        "categoryId": "furniture",
+        "images": [
+          "https://picsum.photos/seed/htc-sofa-1/1200/800",
+          "https://picsum.photos/seed/htc-sofa-2/1200/800"
+        ],
+        "variantTypes": [
+          {
+            "id": "color",
+            "name": "Color",
+            "kind": "color",
+            "values": [
+              "Charcoal",
+              "Beige",
+              "Navy"
+            ],
+            "colors": {
+              "Charcoal": "#36454F",
+              "Beige": "#DCC9A3",
+              "Navy": "#1B2A4A"
+            }
+          }
+        ],
+        "combinations": [
+          {
+            "id": "sofa-charcoal",
+            "options": {
+              "Color": "Charcoal"
+            },
+            "price": 95000,
+            "compareAtPrice": 110000,
+            "stock": 6,
+            "sku": "HTC-SF5-CHAR",
+            "image": "https://picsum.photos/seed/htc-sofa-charcoal/1200/800"
+          },
+          {
+            "id": "sofa-beige",
+            "options": {
+              "Color": "Beige"
+            },
+            "price": 95000,
+            "stock": 7,
+            "sku": "HTC-SF5-BEI",
+            "image": "https://picsum.photos/seed/htc-sofa-beige/1200/800"
+          },
+          {
+            "id": "sofa-navy",
+            "options": {
+              "Color": "Navy"
+            },
+            "price": 99000,
+            "compareAtPrice": 115000,
+            "stock": 4,
+            "sku": "HTC-SF5-NAV",
+            "image": "https://picsum.photos/seed/htc-sofa-navy/1200/800"
+          }
+        ],
+        "basePrice": 95000,
+        "baseStock": 17,
+        "sku": "HTC-SF5-ROYAL",
+        "tags": [
+          "sofa",
+          "furniture",
+          "living room"
+        ],
+        "featured": true,
+        "published": true,
+        "rating": 4.8,
+        "reviewCount": 31,
+        "soldCount": 74,
+        "createdAt": "2026-10-02T15:01:24.171Z",
+        "updatedAt": "2026-10-02T15:01:24.171Z"
+      },
+      {
+        "id": "dining-table-6-seater",
+        "name": "Oakwood 6-Seater Dining Table",
+        "slug": "oakwood-6-seater-dining-table",
+        "description": "Solid oakwood 6-seater dining table with a scratch-resistant lacquered top. Seats six comfortably — perfect for family dinners.",
+        "shortDescription": "Solid oakwood dining table for six.",
+        "categoryId": "furniture",
+        "images": [
+          "https://picsum.photos/seed/htc-dining-1/1200/800"
+        ],
+        "variantTypes": [],
+        "combinations": [],
+        "basePrice": 68000,
+        "baseCompareAtPrice": 75000,
+        "baseStock": 9,
+        "sku": "HTC-DT6-OAK",
+        "tags": [
+          "dining",
+          "table",
+          "furniture"
+        ],
+        "featured": false,
+        "published": true,
+        "rating": 4.6,
+        "reviewCount": 18,
+        "soldCount": 41,
+        "createdAt": "2026-10-02T15:01:24.171Z",
+        "updatedAt": "2026-10-02T15:01:24.171Z"
+      },
+      {
+        "id": "coffee-table-modern",
+        "name": "Modern Center Coffee Table",
+        "slug": "modern-center-coffee-table",
+        "description": "Sleek modern coffee table with tempered glass top and wooden legs. Blends with both classic and contemporary interiors.",
+        "shortDescription": "Glass-top modern coffee table.",
+        "categoryId": "furniture",
+        "images": [
+          "https://picsum.photos/seed/htc-coffee-1/1200/800"
+        ],
+        "variantTypes": [],
+        "combinations": [],
+        "basePrice": 18500,
+        "baseStock": 22,
+        "sku": "HTC-CT-GLASS",
+        "tags": [
+          "coffee table",
+          "living room",
+          "furniture"
+        ],
+        "featured": false,
+        "published": true,
+        "rating": 4.4,
+        "reviewCount": 9,
+        "soldCount": 63,
+        "createdAt": "2026-10-02T15:01:24.171Z",
+        "updatedAt": "2026-10-02T15:01:24.171Z"
+      },
+      {
+        "id": "office-chair-ergo",
+        "name": "Ergonomic Office Chair",
+        "slug": "ergonomic-office-chair",
+        "description": "Ergonomic office chair with lumbar support, adjustable height, and breathable mesh back. Built for long working hours.",
+        "shortDescription": "Ergonomic mesh office chair.",
+        "categoryId": "furniture",
+        "images": [
+          "https://picsum.photos/seed/htc-chair-1/1200/800"
+        ],
+        "variantTypes": [],
+        "combinations": [],
+        "basePrice": 24500,
+        "baseCompareAtPrice": 28000,
+        "baseStock": 30,
+        "sku": "HTC-OC-ERGO",
+        "tags": [
+          "office",
+          "chair",
+          "ergonomic"
+        ],
+        "featured": false,
+        "published": true,
+        "rating": 4.5,
+        "reviewCount": 27,
+        "soldCount": 118,
+        "createdAt": "2026-10-02T15:01:24.172Z",
+        "updatedAt": "2026-10-02T15:01:24.172Z"
+      },
+      {
+        "id": "floor-lamp-brass",
+        "name": "Brass Arc Floor Lamp",
+        "slug": "brass-arc-floor-lamp",
+        "description": "Elegant arc floor lamp with a brushed-brass finish and fabric shade. Warm 3000K LED bulb included.",
+        "shortDescription": "Brushed-brass arc floor lamp.",
+        "categoryId": "interior",
+        "images": [
+          "https://picsum.photos/seed/htc-lamp-1/1200/800"
+        ],
+        "variantTypes": [],
+        "combinations": [],
+        "basePrice": 12900,
+        "baseStock": 18,
+        "sku": "HTC-FL-BRASS",
+        "tags": [
+          "lamp",
+          "lighting",
+          "decor"
+        ],
+        "featured": false,
+        "published": true,
+        "rating": 4.3,
+        "reviewCount": 6,
+        "soldCount": 29,
+        "createdAt": "2026-10-02T15:01:24.172Z",
+        "updatedAt": "2026-10-02T15:01:24.172Z"
+      },
+      {
+        "id": "wall-mirror-round",
+        "name": "Round Rattan Wall Mirror",
+        "slug": "round-rattan-wall-mirror",
+        "description": "Handwoven rattan frame around a 60cm round mirror. Adds warmth and light to entryways, bedrooms, and living rooms.",
+        "shortDescription": "60cm round rattan wall mirror.",
+        "categoryId": "interior",
+        "images": [
+          "https://picsum.photos/seed/htc-mirror-1/1200/800"
+        ],
+        "variantTypes": [],
+        "combinations": [],
+        "basePrice": 8900,
+        "baseStock": 25,
+        "sku": "HTC-WM-RATTAN",
+        "tags": [
+          "mirror",
+          "decor",
+          "rattan"
+        ],
+        "featured": true,
+        "published": true,
+        "rating": 4.6,
+        "reviewCount": 11,
+        "soldCount": 47,
+        "createdAt": "2026-10-02T15:01:24.172Z",
+        "updatedAt": "2026-10-02T15:01:24.172Z"
+      }
+    ],
+    "services": [
+      {
+        "id": "interior-design-consultation",
+        "name": "Interior Design Consultation",
+        "slug": "interior-design-consultation",
+        "description": "A one-on-one session with our senior designers: space planning, material selection, and a concept mood-board for your home or office.",
+        "image": "https://picsum.photos/seed/htc-svc-consult/1200/800",
+        "icon": "PencilRuler",
+        "priceFrom": 15000,
+        "order": 1,
+        "enabled": true,
+        "createdAt": "2026-10-02T15:01:24.172Z"
+      },
+      {
+        "id": "kitchen-remodeling",
+        "name": "Kitchen Remodeling",
+        "slug": "kitchen-remodeling",
+        "description": "Complete kitchen makeovers — custom cabinets, countertops, fittings, and lighting, designed around how you cook.",
+        "image": "https://picsum.photos/seed/htc-svc-kitchen/1200/800",
+        "icon": "ChefHat",
+        "priceFrom": 250000,
+        "order": 2,
+        "enabled": true,
+        "createdAt": "2026-10-02T15:01:24.172Z"
+      },
+      {
+        "id": "office-fit-out",
+        "name": "Office Fit-Out",
+        "slug": "office-fit-out",
+        "description": "Turn-key office interiors: workstations, meeting rooms, acoustic treatment, and branding — delivered on schedule.",
+        "image": "https://picsum.photos/seed/htc-svc-office/1200/800",
+        "icon": "Briefcase",
+        "priceFrom": 500000,
+        "order": 3,
+        "enabled": true,
+        "createdAt": "2026-10-02T15:01:24.172Z"
+      },
+      {
+        "id": "custom-furniture",
+        "name": "Custom Furniture Build",
+        "slug": "custom-furniture",
+        "description": "Made-to-measure furniture built in our own workshop — beds, wardrobes, TV walls, and more, in your choice of wood and finish.",
+        "image": "https://picsum.photos/seed/htc-svc-custom/1200/800",
+        "icon": "Hammer",
+        "priceFrom": 80000,
+        "order": 4,
+        "enabled": true,
+        "createdAt": "2026-10-02T15:01:24.172Z"
+      }
+    ],
+    "projects": [
+      {
+        "id": "dha-lahore-residence",
+        "title": "DHA Lahore Residence",
+        "client": "Private Client",
+        "location": "DHA Phase 6, Lahore",
+        "status": "Ongoing",
+        "progress": 65,
+        "startDate": "2026-06-01T00:00:00.000Z",
+        "description": "Full interior fit-out of a 1-kanal residence: custom wooden doors, kitchen, wardrobes, and living-room panelling.",
+        "images": [
+          "https://picsum.photos/seed/htc-proj-dha-1/1200/800",
+          "https://picsum.photos/seed/htc-proj-dha-2/1200/800",
+          "https://picsum.photos/seed/htc-proj-dha-3/1200/800"
+        ],
+        "videos": [],
+        "featured": true,
+        "order": 1,
+        "createdAt": "2026-10-02T15:01:24.172Z",
+        "updatedAt": "2026-10-02T15:01:24.172Z"
+      },
+      {
+        "id": "gulberg-office-complex",
+        "title": "Gulberg Office Complex",
+        "client": "Tech Firm",
+        "location": "Gulberg Greens, Lahore",
+        "status": "Completed",
+        "progress": 100,
+        "startDate": "2025-11-15T00:00:00.000Z",
+        "endDate": "2026-04-30T00:00:00.000Z",
+        "description": "Turn-key office interior for a 40-person team: workstations, meeting rooms, acoustic panels, and reception branding.",
+        "images": [
+          "https://picsum.photos/seed/htc-proj-gulberg-1/1200/800",
+          "https://picsum.photos/seed/htc-proj-gulberg-2/1200/800"
+        ],
+        "videos": [],
+        "featured": true,
+        "order": 2,
+        "createdAt": "2026-10-02T15:01:24.172Z",
+        "updatedAt": "2026-10-02T15:01:24.172Z"
+      },
+      {
+        "id": "bahria-showroom",
+        "title": "Bahria Town Furniture Showroom",
+        "client": "Retail Partner",
+        "location": "Bahria Town, Lahore",
+        "status": "Upcoming",
+        "progress": 0,
+        "startDate": "2026-11-01T00:00:00.000Z",
+        "description": "Design and build of a 3,000 sq ft furniture showroom with display zones, lighting design, and custom fixtures.",
+        "images": [
+          "https://picsum.photos/seed/htc-proj-bahria-1/1200/800"
+        ],
+        "videos": [],
+        "featured": false,
+        "order": 3,
+        "createdAt": "2026-10-02T15:01:24.172Z",
+        "updatedAt": "2026-10-02T15:01:24.172Z"
+      }
+    ],
+    "heroSlides": [
+      {
+        "id": "hero-doors",
+        "image": "https://picsum.photos/seed/htc-hero-doors/1600/900",
+        "title": "Handcrafted Wooden Doors",
+        "subtitle": "Solid timber, seasoned and termite-treated — built to last decades.",
+        "ctaText": "Shop Doors",
+        "ctaLink": "/shop?category=wooden-doors",
+        "order": 1,
+        "enabled": true,
+        "createdAt": "2026-10-02T15:01:24.172Z"
+      },
+      {
+        "id": "hero-interiors",
+        "image": "https://picsum.photos/seed/htc-hero-interiors/1600/900",
+        "title": "Interiors That Feel Like Home",
+        "subtitle": "From concept to keys — kitchens, offices, and full home fit-outs.",
+        "ctaText": "Explore Services",
+        "ctaLink": "/services",
+        "order": 2,
+        "enabled": true,
+        "createdAt": "2026-10-02T15:01:24.172Z"
+      },
+      {
+        "id": "hero-furniture",
+        "image": "https://picsum.photos/seed/htc-hero-furniture/1600/900",
+        "title": "Furniture Built in Our Workshop",
+        "subtitle": "Sofas, tables, and custom pieces — quality you can feel.",
+        "ctaText": "Shop Furniture",
+        "ctaLink": "/shop?category=furniture",
+        "order": 3,
+        "enabled": true,
+        "createdAt": "2026-10-02T15:01:24.172Z"
+      }
+    ],
+    "siteSettings": [
+      {
+        "id": "main",
+        "siteName": "HTC — Hammer Trading",
+        "tagline": "Quality doors, furniture & interiors — crafted in Pakistan.",
+        "logoUrl": "https://picsum.photos/seed/htc-logo/400/400",
+        "whatsappNumber": "+923001234567",
+        "phone": "+92 300 1234567",
+        "email": "info@htc-hammertrading.com",
+        "address": "Main Boulevard, DHA Phase 6, Lahore, Pakistan",
+        "facebookUrl": "https://facebook.com/htchammertrading",
+        "instagramUrl": "https://instagram.com/htc_hammer_trading",
+        "tiktokUrl": "https://tiktok.com/@htchammertrading",
+        "youtubeUrl": "https://youtube.com/@htchammertrading",
+        "announcementBar": "Free delivery on orders above PKR 50,000 — nationwide!",
+        "freeShippingThreshold": 50000,
+        "updatedAt": "2026-10-02T15:01:24.172Z"
+      }
+    ],
+    "aboutContent": [
+      {
+        "id": "main",
+        "heading": "Craftsmanship You Can Trust Since 2010",
+        "body": "Hammer Trading (HTC) started as a small carpentry workshop in Lahore and has grown into a full-service doors, furniture, and interior-design company. Every piece is built in our own workshop by master craftsmen using seasoned timber and quality hardware. We handle everything in-house — design, manufacturing, delivery, and installation — so you get one accountable partner from concept to completion.",
+        "images": [
+          "https://picsum.photos/seed/htc-about-1/1200/800",
+          "https://picsum.photos/seed/htc-about-2/1200/800"
+        ],
+        "stats": [
+          {
+            "label": "Years of Experience",
+            "value": "15+"
+          },
+          {
+            "label": "Projects Completed",
+            "value": "1,200+"
+          },
+          {
+            "label": "Happy Customers",
+            "value": "8,500+"
+          },
+          {
+            "label": "Cities Served",
+            "value": "25+"
+          }
+        ],
+        "updatedAt": "2026-10-02T15:01:24.172Z"
+      }
+    ],
+    "coupons": [
+      {
+        "id": "coupon-welcome10",
+        "code": "WELCOME10",
+        "type": "percent",
+        "value": 10,
+        "minOrder": 5000,
+        "maxUses": 500,
+        "usedCount": 0,
+        "enabled": true,
+        "expiresAt": "2027-12-31T00:00:00.000Z",
+        "createdAt": "2026-10-02T15:01:24.172Z"
+      },
+      {
+        "id": "coupon-flat500",
+        "code": "FLAT500",
+        "type": "flat",
+        "value": 500,
+        "minOrder": 10000,
+        "maxUses": 200,
+        "usedCount": 0,
+        "enabled": true,
+        "expiresAt": "2027-06-30T00:00:00.000Z",
+        "createdAt": "2026-10-02T15:01:24.172Z"
+      }
+    ]
+  }
+}

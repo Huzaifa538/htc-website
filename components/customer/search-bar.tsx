@@ -1,0 +1,115 @@
+/**
+ * Global search with live suggestions dropdown (products by name).
+ */
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Search } from "lucide-react";
+import { formatPKR } from "@/lib/format";
+import { getProductPrice, primaryImage } from "@/components/customer/product-utils";
+import { useProducts } from "@/components/customer/data-hooks";
+
+export function SearchBar({ compact = false }: { compact?: boolean }) {
+  const router = useRouter();
+  const { products } = useProducts();
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState(false);
+  const boxRef = useRef<HTMLDivElement>(null);
+
+  const suggestions = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    if (needle.length < 2) return [];
+    return products
+      .filter((p) => p.name.toLowerCase().includes(needle))
+      .slice(0, 6);
+  }, [q, products]);
+
+  useEffect(() => {
+    function onClick(e: MouseEvent) {
+      if (boxRef.current && !boxRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
+
+  function submit() {
+    if (!q.trim()) return;
+    setOpen(false);
+    router.push(`/shop?search=${encodeURIComponent(q.trim())}`);
+  }
+
+  return (
+    <div ref={boxRef} className="relative w-full">
+      <div className="flex items-center overflow-hidden rounded-full border bg-white/80 focus-within:ring-2 focus-within:ring-[#D21F26]/40 dark:bg-black/40">
+        <input
+          value={q}
+          onChange={(e) => {
+            setQ(e.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          onKeyDown={(e) => e.key === "Enter" && submit()}
+          placeholder="Search sofas, tables, decor…"
+          className={
+            compact
+              ? "w-full bg-transparent px-3 py-1.5 text-sm outline-none placeholder:text-muted-foreground"
+              : "w-full bg-transparent px-4 py-2 text-sm outline-none placeholder:text-muted-foreground"
+          }
+          aria-label="Search products"
+        />
+        <button
+          onClick={submit}
+          aria-label="Search"
+          className="mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#D21F26] text-white transition hover:bg-[#a8161c]"
+        >
+          <Search size={16} />
+        </button>
+      </div>
+
+      {open && suggestions.length > 0 && (
+        <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border bg-white shadow-2xl dark:bg-stone-950">
+          {suggestions.map((p) => {
+            const price = getProductPrice(p);
+            return (
+              <Link
+                key={p.id}
+                href={`/product/${p.slug || p.id}`}
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 transition hover:bg-muted"
+              >
+                <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl">
+                  <Image
+                    src={primaryImage(p)}
+                    alt={p.name}
+                    fill
+                    className="object-cover"
+                    sizes="44px"
+                  />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium">
+                    {p.name}
+                  </span>
+                  <span className="text-xs font-bold text-[#D21F26]">
+                    {formatPKR(price.price)}
+                  </span>
+                </span>
+              </Link>
+            );
+          })}
+          <button
+            onClick={submit}
+            className="w-full border-t px-3 py-2.5 text-center text-sm font-semibold text-[#D21F26] transition hover:bg-muted"
+          >
+            See all results for “{q.trim()}”
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

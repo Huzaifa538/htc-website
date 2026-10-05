@@ -1,0 +1,74 @@
+/**
+ * Cloud Storage security rules for HTC (Hammer Trading).
+ *
+ * Deploy: firebase deploy --only storage
+ *
+ * Admin model mirrors firestore.rules: the custom claim `admin: true`
+ * (set via `node scripts/set-admin-claim.js <uid-or-email>`) grants write
+ * access. Add bootstrap emails to ADMIN_FALLBACK_EMAILS if needed.
+ */
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.admin == true ||
+        request.auth.token.email in [
+          // ADMIN_FALLBACK_EMAILS — keep in sync with NEXT_PUBLIC_ADMIN_EMAILS.
+        ]
+      );
+    }
+
+    /* Public read for site imagery & video; write restricted to admins. */
+    match /products/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /gallery/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /hero/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /categories/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /projects/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /services/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /branding/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    /* Users may upload their own chat images under chats/{uid}/... */
+    match /chats/{uid}/{allPaths=**} {
+      allow read: if isSignedIn() && (request.auth.uid == uid || request.auth.token.admin == true);
+      allow write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    /* Review photos uploaded by signed-in customers. */
+    match /reviews/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

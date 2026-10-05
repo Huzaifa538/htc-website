@@ -1,0 +1,191 @@
+/**
+ * Firestore security rules for HTC (Hammer Trading).
+ *
+ * Deploy: firebase deploy --only firestore:rules
+ *
+ * Admin model:
+ * - The Firebase Auth custom claim `admin: true` is the AUTHORITATIVE
+ *   signal inside these rules. Set it with `node scripts/set-admin-claim.js
+ *   <uid-or-email>` after adding the email to NEXT_PUBLIC_ADMIN_EMAILS.
+ * - `isAdmin()` also accepts a hardcoded fallback email list for emergency
+ *   bootstrap (edit ADMIN_FALLBACK_EMAILS below); prefer the custom claim.
+ */
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.admin == true ||
+        request.auth.token.email in [
+          // ADMIN_FALLBACK_EMAILS — emergency bootstrap list.
+          // Keep in sync with NEXT_PUBLIC_ADMIN_EMAILS. The custom claim
+          // `admin: true` (set via scripts/set-admin-claim.js) is preferred.
+        ]
+      );
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /* Role-based admin access. The `role` custom claim is set on login
+     * (owner/manager/staff/viewer); missing claim = owner (backward compat). */
+    function adminRole() {
+      return request.auth.token.role == null
+        ? "owner"
+        : request.auth.token.role;
+    }
+    function roleIn(roles) {
+      return isAdmin() && adminRole() in roles;
+    }
+
+    /* ---------- Public catalog (read for everyone, write for admins) --- */
+    match /products/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /categories/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /heroSlides/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /services/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /projects/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /galleryVideos/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    // Comments on gallery videos: anyone can read; signed-in users can
+    // post as themselves; users can edit/delete their own, admins any.
+    match /galleryVideos/{videoId}/comments/{commentId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+    match /galleryImages/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /aboutContent/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /siteSettings/{id} {
+      allow read: if true;
+      allow write: if roleIn(["owner", "manager"]);
+    }
+
+    /* ---------- Per-user data (owner + admin) --------------------------- */
+    match /users/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+    match /carts/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+    match /wishlists/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+    match /orders/{orderId} {
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid;
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
+      // Customers cannot edit orders after placement; admins can update status.
+      allow update, delete: if isAdmin();
+    }
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+    match /chats/{chatId}/{rest=**} {
+      // chatId === user uid
+      allow read, write: if isOwner(chatId) || isAdmin();
+    }
+    match /notifications/{notifId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isAdmin();
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+
+    /* ---------- Management collections (role-based) ---------------------- */
+    // Shipments: staff can manage; customers can read their own order's.
+    match /shipments/{id} {
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create, update: if roleIn(["owner", "manager", "staff"]);
+      allow delete: if roleIn(["owner", "manager"]);
+    }
+    // Expenses: financial data — owner/manager only.
+    match /expenses/{id} {
+      allow read, write: if roleIn(["owner", "manager"]);
+    }
+    // Staff roster: owner manages; managers can view.
+    match /staff/{id} {
+      allow read: if roleIn(["owner", "manager"]);
+      allow write: if roleIn(["owner"]);
+    }
+    // Appointments: public booking form; staff manage.
+    match /appointments/{id} {
+      allow create: if true;
+      allow read: if roleIn(["owner", "manager", "staff", "viewer"]);
+      allow update, delete: if roleIn(["owner", "manager", "staff"]);
+    }
+
+    /* ---------- Admin-only ---------------------------------------------- */
+    match /admins/{id} {
+      allow read, write: if isAdmin();
+    }
+    match /coupons/{id} {
+      allow read: if true; // storefront validates active codes
+      allow write: if isAdmin();
+    }
+    match /serviceInquiries/{id} {
+      allow create: if true; // public inquiry form
+      allow read, update, delete: if isAdmin();
+    }
+    // Quotations: public "request quote" form (service pages) creates them;
+    // admin-created ones use the same rule. Owner can read their own.
+    match /quotations/{id} {
+      allow create: if true;
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
+      // Only admins can price, status-change, or convert quotations.
+      allow update, delete: if isAdmin();
+    }
+    match /contactMessages/{id} {
+      allow create: if true; // public contact form
+      allow read, update, delete: if isAdmin();
+    }
+    match /newsletters/{id} {
+      allow create: if true; // public newsletter signup
+      allow read, update, delete: if isAdmin();
+    }
+
+    /* ---------- Deny everything else ------------------------------------- */
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
