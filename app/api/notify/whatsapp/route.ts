@@ -14,6 +14,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
 import { adminDb, isAdminConfigured } from "@/lib/firebase/admin";
 import { COLLECTIONS } from "@/lib/firebase/collections";
+import { ADMIN_SESSION_COOKIE } from "@/middleware";
 import type { IntegrationSettings, NewDoc, Notification } from "@/lib/types";
 import { readJsonBody } from "@/lib/validation";
 import { tooManyRequests } from "@/lib/rate-limit";
@@ -83,7 +84,11 @@ export async function POST(req: NextRequest) {
     );
   }
   const body = parsed.data;
-  const to = body.to && body.to.length > 0 ? body.to : undefined;
+  // Only the signed-in admin may choose the recipient. Public callers
+  // (order/appointment alerts) always notify the owner — otherwise anyone
+  // could send messages to arbitrary numbers through this account.
+  const isAdmin = req.cookies.get(ADMIN_SESSION_COOKIE)?.value === "1";
+  const to = isAdmin && body.to && body.to.length > 0 ? body.to : undefined;
   const message = body.message;
   let title = "MTR Store: New order — WhatsApp not configured";
   let type: Notification["type"] = "order";
