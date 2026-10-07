@@ -31,6 +31,31 @@ const nextConfig = {
       },
     ];
   },
+  // Security headers — applied to every response.
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          // Clickjacking protection.
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          // MIME-sniffing protection.
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          // Referrer policy — don't leak full URLs to third parties.
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          // Force HTTPS (1 year, subdomains included).
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=31536000; includeSubDomains",
+          },
+          // Block Flash / old plugin content types.
+          { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
+          // Basic XSS filter hint for older browsers.
+          { key: "X-XSS-Protection", value: "1; mode=block" },
+        ],
+      },
+    ];
+  },
 };
 
 // Sentry is only wired into the build when a DSN is configured — without

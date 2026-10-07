@@ -17,6 +17,11 @@ import { adminAuth, adminDb, isAdminConfigured } from "@/lib/firebase/admin";
 import { COLLECTIONS } from "@/lib/firebase/collections";
 import { isAdminEmail } from "@/lib/auth";
 import { ADMIN_SESSION_COOKIE } from "@/middleware";
+import {
+  checkRateLimit,
+  getClientIp,
+  rateLimitHeaders,
+} from "@/lib/rate-limit";
 
 const COOKIE_OPTS = {
   httpOnly: true,
@@ -26,6 +31,16 @@ const COOKIE_OPTS = {
 };
 
 export async function POST(req: NextRequest) {
+  // Brute-force guard: max 5 session attempts per IP per 15 minutes.
+  const ip = getClientIp(req);
+  const limit = checkRateLimit(`auth:${ip}`, { windowMs: 15 * 60_000, max: 5 });
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Too many attempts. Please try again later." },
+      { status: 429, headers: rateLimitHeaders(limit) }
+    );
+  }
+
   if (!isAdminConfigured() || !adminAuth) {
     return NextResponse.json(
       { error: "Firebase Admin SDK is not configured" },
