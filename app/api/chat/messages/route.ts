@@ -18,8 +18,13 @@ import {
   parseOr400,
   readJsonBody,
 } from "@/lib/validation";
+import { tooManyRequests } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  // Anti-spam: max 60 messages per IP per hour.
+  const limited = tooManyRequests(req, "chat");
+  if (limited) return limited;
+
   if (!isAdminConfigured() || !adminAuth || !adminDb) {
     return NextResponse.json(
       { error: "Chat service is not configured" },

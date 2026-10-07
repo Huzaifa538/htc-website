@@ -17,6 +17,8 @@
  *   }
  */
 
+import { NextResponse } from "next/server";
+
 interface RateLimitOptions {
   /** Window length in milliseconds. Default: 15 minutes. */
   windowMs?: number;
@@ -24,8 +26,7 @@ interface RateLimitOptions {
   max?: number;
 }
 
-interface RateLimitResult {
-  allowed: boolean;
+interface RateLimitResult {  allowed: boolean;
   /** Requests remaining in the current window. */
   remaining: number;
   /** Seconds until the window resets. */
@@ -95,4 +96,42 @@ export function getClientIp(req: Request): string {
   const realIp = req.headers.get("x-real-ip");
   if (realIp) return realIp.trim();
   return "unknown";
+}
+
+/**
+ * Per-route budgets: { windowMs, max attempts per window } per caller IP.
+ * Kept deliberately small and human-readable — one line per route.
+ */
+const ROUTE_LIMITS: Record<string, RateLimitOptions> = {
+  "auth": { windowMs: 15 * 60_000, max: 5 },        // admin session minting
+  "orders": { windowMs: 60 * 60_000, max: 30 },     // checkout spam
+  "appointments": { windowMs: 60 * 60_000, max: 10 }, // booking-form spam
+  "chat": { windowMs: 60 * 60_000, max: 60 },       // chat message spam
+  "upload": { windowMs: 60 * 60_000, max: 30 },     // blob storage abuse
+  "whatsapp": { windowMs: 60 * 60_000, max: 10 },   // paid WhatsApp sends
+};
+
+/**
+ * One-call guard for route handlers. Returns a 429 JSON response when the
+ * caller is over the route's budget, or null when the request may continue.
+ *
+ * Put it at the very top of the handler — before token verification or
+ * database reads — so abusive traffic is rejected cheaply.
+ *
+ * Usage:
+ *   import { tooManyRequests } from "@/lib/rate-limit";
+ *   export async function POST(req: NextRequest) {
+ *     const limited = tooManyRequests(req, "orders");
+ *     if (limited) return limited;
+ *     ...
+ *   }
+ */
+export function tooManyRequests(req: Request, key: string) {
+  const opts = ROUTE_LIMITS[key] ?? {};
+  const result = checkRateLimit(`${key}:${getClientIp(req)}`, opts);
+  if (result.allowed) return null;
+  return NextResponse.json(
+    { error: "Too many attempts. Please try again later." },
+    { status: 429, headers: rateLimitHeaders(result) }
+  );
 }

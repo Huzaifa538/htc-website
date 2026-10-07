@@ -17,8 +17,13 @@ import {
   parseOr400,
   readJsonBody,
 } from "@/lib/validation";
+import { tooManyRequests } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  // Anti-spam: max 10 bookings per IP per hour.
+  const limited = tooManyRequests(req, "appointments");
+  if (limited) return limited;
+
   if (!isAdminConfigured() || !adminDb) {
     return NextResponse.json(
       { error: "Booking service is not configured" },

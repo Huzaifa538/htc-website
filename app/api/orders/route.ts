@@ -26,6 +26,7 @@ import {
   cartSubtotal,
 } from "@/lib/cart-totals";
 import { getProductPrice } from "@/components/customer/product-utils";
+import { tooManyRequests } from "@/lib/rate-limit";
 import type {
   Coupon,
   OrderAddress,
@@ -39,6 +40,10 @@ function err(status: number, message: string) {
 }
 
 export async function POST(req: NextRequest) {
+  // Anti-spam: max 30 orders per IP per hour.
+  const limited = tooManyRequests(req, "orders");
+  if (limited) return limited;
+
   if (!isAdminConfigured() || !adminAuth || !adminDb) {
     return err(503, "Order service is not configured");
   }

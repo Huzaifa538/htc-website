@@ -18,6 +18,7 @@ import * as Sentry from "@sentry/nextjs";
 import { put } from "@vercel/blob";
 import { adminAuth, isAdminConfigured } from "@/lib/firebase/admin";
 import { ADMIN_SESSION_COOKIE } from "@/middleware";
+import { tooManyRequests } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -51,6 +52,10 @@ function sanitizeFilename(name: string): string {
 }
 
 export async function POST(req: NextRequest) {
+  // Anti-abuse: max 30 uploads per IP per hour (blob storage costs money).
+  const limited = tooManyRequests(req, "upload");
+  if (limited) return limited;
+
   const admin = isAdmin(req);
 
   let form: FormData;

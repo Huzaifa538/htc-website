@@ -16,6 +16,7 @@ import { adminDb, isAdminConfigured } from "@/lib/firebase/admin";
 import { COLLECTIONS } from "@/lib/firebase/collections";
 import type { IntegrationSettings, NewDoc, Notification } from "@/lib/types";
 import { readJsonBody } from "@/lib/validation";
+import { tooManyRequests } from "@/lib/rate-limit";
 
 const whatsappBodySchema = z.object({
   to: z.string().trim().max(30).optional(),
@@ -55,6 +56,11 @@ async function storeAdminFallback(
 }
 
 export async function POST(req: NextRequest) {
+  // Anti-abuse: max 10 WhatsApp sends per IP per hour — every send costs
+  // money on the Meta API and a spammer could burn the account.
+  const limited = tooManyRequests(req, "whatsapp");
+  if (limited) return limited;
+
   if (!isAdminConfigured() || !adminDb) {
     return NextResponse.json(
       { sent: false, reason: "not-configured" },
