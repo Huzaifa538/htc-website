@@ -45,6 +45,7 @@ import { useHydratedCart } from "@/components/customer/use-hydrated-cart";
 import { fetchCollection } from "@/components/customer/data-hooks";
 import { notifyOwnerOrder } from "@/lib/whatsapp";
 import { formatPKR } from "@/lib/format";
+import { useLanguage, type Dictionary } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { AppUser, Coupon, OrderAddress, OrderItem, PaymentMethod } from "@/lib/types";
 
@@ -61,28 +62,25 @@ const addressSchema = z.object({
 
 type AddressForm = z.infer<typeof addressSchema>;
 
-const PAYMENT_METHODS: { value: PaymentMethod; label: string; desc: string; icon: typeof Banknote }[] = [
-  {
-    value: "COD",
-    label: "Cash on Delivery",
-    desc: "Pay in cash when your furniture arrives.",
-    icon: Banknote,
-  },
-  {
-    value: "BankTransfer",
-    label: "Bank Transfer",
-    desc: "Our team will share account details after you order.",
-    icon: Building2,
-  },
-  {
-    value: "Card",
-    label: "Debit / Credit Card",
-    desc: "Online card payments launching soon — our team will coordinate.",
-    icon: CreditCard,
-  },
+const PAYMENT_METHODS: { value: PaymentMethod; icon: typeof Banknote }[] = [
+  { value: "COD", icon: Banknote },
+  { value: "BankTransfer", icon: Building2 },
+  { value: "Card", icon: CreditCard },
 ];
 
+function paymentMeta(t: Dictionary, value: PaymentMethod): { label: string; desc: string } {
+  switch (value) {
+    case "COD":
+      return { label: t.checkout.cod, desc: t.checkout.codDesc };
+    case "BankTransfer":
+      return { label: t.checkout.bankTransfer, desc: t.checkout.bankTransferDesc };
+    case "Card":
+      return { label: t.checkout.card, desc: t.checkout.cardDesc };
+  }
+}
+
 function CheckoutPageContent() {
+  const { t } = useLanguage();
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { lines, coupon, subtotal, discount, shipping, total } = useHydratedCart();
@@ -241,12 +239,8 @@ function CheckoutPageContent() {
 
       clearCart();
       router.replace(`/checkout/success?orderId=${orderId}`);
-    } catch (e) {
-      const message =
-        e instanceof Error && e.message !== "order-failed"
-          ? e.message
-          : "Could not place your order — please try again.";
-      toast.error(message);
+    } catch {
+      toast.error(t.checkout.orderFailed);
       setPlacing(false);
     }
   }
@@ -371,7 +365,7 @@ function CheckoutPageContent() {
                     </span>
                     <span>
                       <span className="flex items-center gap-2 font-bold">
-                        {m.label}
+                        {paymentMeta(t, m.value).label}
                         {m.value === "COD" && (
                           <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-[11px] font-bold text-green-700 dark:bg-green-950 dark:text-green-300">
                             Recommended
@@ -379,7 +373,7 @@ function CheckoutPageContent() {
                         )}
                       </span>
                       <span className="mt-0.5 block text-sm text-muted-foreground">
-                        {m.desc}
+                        {paymentMeta(t, m.value).desc}
                       </span>
                     </span>
                   </button>

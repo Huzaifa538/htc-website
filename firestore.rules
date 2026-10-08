@@ -161,6 +161,14 @@ service cloud.firestore {
       allow read: if true; // storefront validates active codes
       allow write: if isAdmin();
     }
+    match /flashSales/{id} {
+      allow read: if true; // storefront banner reads the active sale
+      allow write: if isAdmin();
+    }
+    match /combos/{id} {
+      allow read: if true; // public combos page
+      allow write: if isAdmin();
+    }
     match /serviceInquiries/{id} {
       allow create: if true; // public inquiry form
       allow read, update, delete: if isAdmin();

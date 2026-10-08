@@ -51,6 +51,8 @@ export interface Product {
   basePrice: number; // PKR
   baseCompareAtPrice?: number; // PKR
   baseStock: number;
+  /** Stock level at/below which the product shows a low-stock alert. Defaults to 10. */
+  lowStockThreshold?: number;
   /** Optional purchase/cost price (PKR) — used for profit reports. */
   costPrice?: number;
   sku: string;
@@ -62,6 +64,10 @@ export interface Product {
   soldCount: number;
   /** Times this product was delivered to a customer (historical + tracked). */
   deliveredCount?: number;
+  /** Demo video URL (YouTube link or direct mp4) — shown in a "Product demo"
+   *  section on the product page when set. Huzaifa uploads the actual demo
+   *  videos later; empty means no video section is rendered. */
+  videoUrl?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -135,6 +141,42 @@ export interface Coupon {
   usedCount: number;
   enabled: boolean;
   expiresAt?: Timestamp;
+  createdAt: Timestamp;
+}
+
+/**
+ * Flash sale — a site-wide time-boxed discount shown as a countdown
+ * banner on the storefront. Only one is active at a time (the admin
+ * enables/disables them); the frontend picks the enabled sale whose
+ * window contains "now".
+ */
+export interface FlashSale {
+  id: string;
+  title: string; // e.g. "Eid Flash Sale"
+  discountPct: number; // 1–90
+  startsAt: Timestamp;
+  endsAt: Timestamp;
+  enabled: boolean;
+  /** Optional: only these category ids get the discount (empty = all). */
+  categoryIds?: string[];
+  createdAt: Timestamp;
+}
+
+/**
+ * Combo deal — a bundle of products sold together at a bundle price.
+ * e.g. "Complete Door Kit": handle + lock + hinges.
+ */
+export interface Combo {
+  id: string;
+  title: string; // e.g. "Complete Door Kit"
+  description?: string;
+  image?: string;
+  /** Product ids included in the bundle. */
+  productIds: string[];
+  /** Bundle price in PKR (must be < sum of product prices to make sense). */
+  bundlePrice: number;
+  enabled: boolean;
+  order: number;
   createdAt: Timestamp;
 }
 
@@ -220,6 +262,9 @@ export interface Project {
   description: string;
   images: string[];
   videos: string[];
+  /** Before/after pair for the portfolio comparison slider (optional). */
+  beforeImage?: string;
+  afterImage?: string;
   featured: boolean;
   order: number;
   createdAt: Timestamp;
@@ -309,6 +354,8 @@ export interface AppUser {
   phone?: string;
   photoURL?: string;
   addresses: OrderAddress[];
+  /** Internal admin notes, e.g. "prefers COD", "wholesale buyer". Never shown to the customer. */
+  notes?: string;
   createdAt: Timestamp;
 }
 

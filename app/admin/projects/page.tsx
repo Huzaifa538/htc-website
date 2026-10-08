@@ -56,6 +56,8 @@ export default function ProjectsPage() {
   const [editing, setEditing] = useState<Project | null>(null);
   const [images, setImages] = useState<string[]>([]);
   const [videos, setVideos] = useState<string[]>([]);
+  const [beforeImage, setBeforeImage] = useState<string[]>([]);
+  const [afterImage, setAfterImage] = useState<string[]>([]);
   const [confirmDelete, setConfirmDelete] = useState<Project | null>(null);
 
   const form = useForm<FormValues>({
@@ -90,6 +92,8 @@ export default function ProjectsPage() {
     });
     setImages([]);
     setVideos([]);
+    setBeforeImage([]);
+    setAfterImage([]);
     setDialogOpen(true);
   };
 
@@ -109,6 +113,8 @@ export default function ProjectsPage() {
     });
     setImages(p.images ?? []);
     setVideos(p.videos ?? []);
+    setBeforeImage(p.beforeImage ? [p.beforeImage] : []);
+    setAfterImage(p.afterImage ? [p.afterImage] : []);
     setDialogOpen(true);
   };
 
@@ -131,6 +137,8 @@ export default function ProjectsPage() {
         description: values.description.trim(),
         images,
         videos,
+        beforeImage: beforeImage[0] ?? null,
+        afterImage: afterImage[0] ?? null,
         featured: values.featured,
         order: values.order ?? 0,
         updatedAt: serverTimestamp(),
@@ -266,6 +274,26 @@ export default function ProjectsPage() {
               <TextField control={control} name="endDate" label="End date" type="date" hint="Optional" />
             </div>
             <TextAreaField control={control} name="description" label="Description" rows={4} />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <ImageUpload
+                value={beforeImage}
+                onChange={setBeforeImage}
+                folder="projects/before-after"
+                multiple={false}
+                max={1}
+                label="Before photo"
+                hint="Shown on the left of the portfolio comparison slider"
+              />
+              <ImageUpload
+                value={afterImage}
+                onChange={setAfterImage}
+                folder="projects/before-after"
+                multiple={false}
+                max={1}
+                label="After photo"
+                hint="Shown on the right of the portfolio comparison slider"
+              />
+            </div>
             <ImageUpload value={images} onChange={setImages} folder="projects" label="Project images" />
             <ImageUpload
               value={videos}

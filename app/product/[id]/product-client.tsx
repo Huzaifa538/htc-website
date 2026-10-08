@@ -11,6 +11,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
+  Camera,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -23,6 +24,7 @@ import {
   ShieldCheck,
   ShoppingCart,
   Truck,
+  X,
   Zap,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -41,12 +43,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useProduct, useProducts, useReviews } from "@/components/customer/data-hooks";
+import { WhatsAppOrderButton } from "@/components/customer/whatsapp-order-button";
 import { useCartStore } from "@/lib/store/cart";
 import { useWishlistStore } from "@/lib/store/wishlist";
 import { useUiStore } from "@/lib/store/ui";
 import { useChatUiStore } from "@/lib/store/chat-ui";
 import { formatPKR, formatPrice, isPriceUnset } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { uploadFile } from "@/lib/uploads";
 import {
   findCombination,
   getCombinationPrice,
@@ -108,6 +112,11 @@ export default function ProductPage({ id: propId }: { id?: string }) {
   const [reviewTitle, setReviewTitle] = useState("");
   const [reviewText, setReviewText] = useState("");
   const [reviewBusy, setReviewBusy] = useState(false);
+  // Pending review photos (local File objects with preview URLs).
+  const [reviewFiles, setReviewFiles] = useState<{ file: File; preview: string }[]>([]);
+  const [reviewUploading, setReviewUploading] = useState(false);
+  // Lightbox for review photos: { photos, index } or null.
+  const [reviewLightbox, setReviewLightbox] = useState<{ photos: string[]; index: number } | null>(null);
 
   const { reviews, loading: reviewsLoading } = useReviews(product?.id ?? "__none__");
 
@@ -155,6 +164,12 @@ export default function ProductPage({ id: propId }: { id?: string }) {
 
   const youtubeUrl = product ? productYoutubeUrl(product) : undefined;
   const embedUrl = youtubeUrl ? youtubeEmbedUrl(youtubeUrl) : null;
+
+  // Demo video: Huzaifa uploads the actual product demo videos later.
+  // Accepts a YouTube link (embedded) or a direct mp4/webm URL (native player).
+  // The whole section stays hidden until a video URL is set on the product.
+  const demoVideoUrl = product?.videoUrl?.trim() || "";
+  const demoEmbedUrl = demoVideoUrl ? youtubeEmbedUrl(demoVideoUrl) : null;
 
   function selectOption(typeName: string, value: string) {
     setOptions((o) => ({ ...o, [typeName]: value }));
@@ -209,6 +224,31 @@ export default function ProductPage({ id: propId }: { id?: string }) {
     toast.success("Chat opened — ask us anything about this product");
   }
 
+  function pickReviewPhotos(files: FileList | null) {
+    if (!files) return;
+    const imgs = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    if (imgs.length === 0) {
+      toast.error("Please choose image files.");
+      return;
+    }
+    setReviewFiles((prev) => {
+      const next = [
+        ...prev,
+        ...imgs.map((file) => ({ file, preview: URL.createObjectURL(file) })),
+      ].slice(0, 4);
+      if (prev.length + imgs.length > 4) toast.error("You can attach up to 4 photos.");
+      return next;
+    });
+  }
+
+  function removeReviewPhoto(preview: string) {
+    setReviewFiles((prev) => {
+      const target = prev.find((p) => p.preview === preview);
+      if (target) URL.revokeObjectURL(target.preview);
+      return prev.filter((p) => p.preview !== preview);
+    });
+  }
+
   async function submitReview(e: React.FormEvent) {
     e.preventDefault();
     if (!user || !product || !db) return;
@@ -218,6 +258,19 @@ export default function ProductPage({ id: propId }: { id?: string }) {
     }
     setReviewBusy(true);
     try {
+      // Upload review photos first (signed-in customers may use the reviews/ folder).
+      let images: string[] = [];
+      if (reviewFiles.length > 0) {
+        setReviewUploading(true);
+        try {
+          const idToken = await user.getIdToken();
+          images = await Promise.all(
+            reviewFiles.map((p) => uploadFile(p.file, { folder: "reviews", idToken }))
+          );
+        } finally {
+          setReviewUploading(false);
+        }
+      }
       await addDoc(collection(db, COLLECTIONS.reviews), {
         productId: product.id,
         userId: user.uid,
@@ -225,6 +278,7 @@ export default function ProductPage({ id: propId }: { id?: string }) {
         rating: reviewRating,
         title: reviewTitle.trim() || undefined,
         comment: reviewText.trim(),
+        ...(images.length > 0 ? { images } : {}),
         approved: false,
         createdAt: serverTimestamp(),
       });
@@ -232,6 +286,8 @@ export default function ProductPage({ id: propId }: { id?: string }) {
       setReviewTitle("");
       setReviewText("");
       setReviewRating(5);
+      reviewFiles.forEach((p) => URL.revokeObjectURL(p.preview));
+      setReviewFiles([]);
     } catch {
       toast.error("Could not submit review — please try again.");
     } finally {
@@ -508,6 +564,22 @@ export default function ProductPage({ id: propId }: { id?: string }) {
             </div>
             )}
 
+            {/* WhatsApp direct order — pre-filled with product + price */}
+            {!isPriceUnset(priceInfo!.price) && (
+              <div className="mt-3">
+                <WhatsAppOrderButton
+                  productName={product.name}
+                  priceLabel={formatPrice(priceInfo!.price)}
+                  productUrl={
+                    typeof window !== "undefined"
+                      ? window.location.href
+                      : `/product/${product.slug || product.id}`
+                  }
+                  quantity={qty}
+                />
+              </div>
+            )}
+
             {/* Trust badges */}
             <div className="mt-6 grid grid-cols-3 gap-3 text-center">
               {[
@@ -563,6 +635,39 @@ export default function ProductPage({ id: propId }: { id?: string }) {
           </Reveal>
         )}
 
+        {/* Product demo video — only renders when a video URL is set */}
+        {demoVideoUrl && (
+          <Reveal className="mt-8">
+            <div className="rounded-3xl border bg-card p-6 sm:p-8">
+              <h2 className="flex items-center gap-2 font-display text-2xl font-extrabold">
+                <Play size={22} className="text-[#D21F26]" /> Product Demo
+              </h2>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                Watch this product in action.
+              </p>
+              <div className="mt-4 aspect-video overflow-hidden rounded-2xl bg-black">
+                {demoEmbedUrl ? (
+                  <iframe
+                    src={demoEmbedUrl}
+                    title="Product demo video"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="h-full w-full"
+                  />
+                ) : (
+                  <video
+                    src={demoVideoUrl}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="h-full w-full"
+                  />
+                )}
+              </div>
+            </div>
+          </Reveal>
+        )}
+
         {/* Reviews */}
         <Reveal className="mt-8">
           <div className="rounded-3xl border bg-card p-6 sm:p-8">
@@ -599,6 +704,22 @@ export default function ProductPage({ id: propId }: { id?: string }) {
                     <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
                       {r.comment}
                     </p>
+                    {r.images && r.images.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {r.images.map((src, i) => (
+                          <button
+                            key={src}
+                            type="button"
+                            onClick={() => setReviewLightbox({ photos: r.images!, index: i })}
+                            className="relative h-16 w-16 overflow-hidden rounded-xl border transition hover:opacity-85"
+                            aria-label={`View review photo ${i + 1}`}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={src} alt={`Review photo ${i + 1}`} className="h-full w-full object-cover" />
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -637,6 +758,45 @@ export default function ProductPage({ id: propId }: { id?: string }) {
                     rows={4}
                     className="rounded-xl"
                   />
+                  <div>
+                    <p className="mb-2 text-sm font-semibold">
+                      Photos <span className="font-normal text-muted-foreground">(optional, up to 4)</span>
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {reviewFiles.map((p) => (
+                        <div key={p.preview} className="relative h-16 w-16 overflow-hidden rounded-xl border">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={p.preview} alt="Review photo preview" className="h-full w-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => removeReviewPhoto(p.preview)}
+                            className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-white hover:bg-[#D21F26]"
+                            aria-label="Remove photo"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))}
+                      {reviewFiles.length < 4 && (
+                        <label className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed text-muted-foreground transition hover:border-[#D21F26] hover:text-[#D21F26]">
+                          <Camera size={20} />
+                          <span className="text-[10px] font-semibold">Add</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            className="hidden"
+                            onChange={(e) => pickReviewPhotos(e.target.files)}
+                          />
+                        </label>
+                      )}
+                    </div>
+                    {reviewUploading && (
+                      <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                        <Loader2 size={12} className="animate-spin" /> Uploading photos…
+                      </p>
+                    )}
+                  </div>
                   <Button
                     type="submit"
                     disabled={reviewBusy}
@@ -702,6 +862,49 @@ export default function ProductPage({ id: propId }: { id?: string }) {
               </>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+      {/* Review photo lightbox */}
+      <Dialog open={reviewLightbox !== null} onOpenChange={(o) => !o && setReviewLightbox(null)}>
+        <DialogContent className="max-w-4xl border-0 bg-black/95 p-2">
+          {reviewLightbox && (
+            <div className="relative aspect-video w-full">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={reviewLightbox.photos[reviewLightbox.index]}
+                alt={`Review photo ${reviewLightbox.index + 1}`}
+                className="h-full w-full object-contain"
+              />
+              {reviewLightbox.photos.length > 1 && (
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setReviewLightbox((s) =>
+                        s ? { photos: s.photos, index: (s.index - 1 + s.photos.length) % s.photos.length } : s
+                      );
+                    }}
+                    aria-label="Previous photo"
+                    className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white hover:bg-[#D21F26]"
+                  >
+                    <ChevronLeft size={22} />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setReviewLightbox((s) =>
+                        s ? { photos: s.photos, index: (s.index + 1) % s.photos.length } : s
+                      );
+                    }}
+                    aria-label="Next photo"
+                    className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white hover:bg-[#D21F26]"
+                  >
+                    <ChevronRight size={22} />
+                  </button>
+                </>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </SiteShell>

@@ -23,6 +23,7 @@ import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db, isFirebaseConfigured } from "@/lib/firebase/client";
 import { SiteShell } from "@/components/customer/site-shell";
 import { HeroSlider } from "@/components/customer/hero-slider";
+import { FlashSaleBanner } from "@/components/flash-sale-banner";
 import { ProductCard } from "@/components/customer/product-card";
 import { Reveal, SectionHeading, AnimatedCounter } from "@/components/customer/reveal";
 import { Stars } from "@/components/customer/stars";
@@ -493,6 +494,7 @@ function Newsletter() {
 export default function HomePage() {
   return (
     <SiteShell>
+      <FlashSaleBanner />
       <HeroSlider />
 
       <section className="container mt-16">

@@ -13,8 +13,10 @@ import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTheme } from "next-themes";
 import {
+  Gift,
   Heart,
   Home,
+  Images,
   Info,
   LayoutGrid,
   LogOut,
@@ -31,6 +33,8 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "@/components/providers";
+import { useLanguage } from "@/lib/i18n";
+import { LanguageToggle } from "@/components/customer/language-toggle";
 import { useCartStore } from "@/lib/store/cart";
 import { useWishlistStore } from "@/lib/store/wishlist";
 import { isShopRoute } from "@/lib/brand";
@@ -46,19 +50,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const LINKS = [
-  { href: "/", label: "Home", icon: Home },
-  { href: "/shop", label: "Shop", icon: LayoutGrid },
-  { href: "/services", label: "Services", icon: Sparkles },
-  { href: "/projects", label: "Projects", icon: Package },
-  { href: "/gallery", label: "Gallery", icon: Search },
-  { href: "/about", label: "About", icon: Info },
-  { href: "/contact", label: "Contact", icon: Mail },
-];
+  { href: "/", key: "home", icon: Home },
+  { href: "/shop", key: "shop", icon: LayoutGrid },
+  { href: "/combos", key: "combos", icon: Gift },
+  { href: "/services", key: "services", icon: Sparkles },
+  { href: "/projects", key: "projects", icon: Package },
+  { href: "/portfolio", key: "portfolio", icon: Images },
+  { href: "/gallery", key: "gallery", icon: Search },
+  { href: "/about", key: "about", icon: Info },
+  { href: "/contact", key: "contact", icon: Mail },
+] as const;
 
 const ACCENT = "#D21F26";
 
 function ThemeToggle() {
   const { theme, setTheme } = useTheme();
+  const { t } = useLanguage();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   if (!mounted) return <span className="h-10 w-10" />;
@@ -66,7 +73,7 @@ function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(dark ? "light" : "dark")}
-      aria-label="Toggle theme"
+      aria-label={t.header.toggleTheme}
       className="flex h-10 w-10 items-center justify-center rounded-full text-foreground/70 ring-1 ring-black/5 transition-all duration-200 hover:bg-black/[0.04] hover:text-foreground active:scale-95 dark:text-foreground/70 dark:ring-white/10 dark:hover:bg-white/10 dark:hover:text-foreground"
     >
       {dark ? <Sun size={18} strokeWidth={1.8} /> : <Moon size={18} strokeWidth={1.8} />}
@@ -95,6 +102,7 @@ function BadgeCount({ count }: { count: number }) {
 
 export function Navbar({ announcement }: { announcement?: string }) {
   const pathname = usePathname();
+  const { t } = useLanguage();
   const { user, isAdmin, loading, signOut } = useAuth();
   const cartCount = useCartStore((s) =>
     s.lines.reduce((sum, l) => sum + l.qty, 0)
@@ -143,7 +151,7 @@ export function Navbar({ announcement }: { announcement?: string }) {
             <button
               className="flex h-10 w-10 items-center justify-center rounded-full text-foreground/80 ring-1 ring-black/5 transition-all hover:bg-black/[0.04] active:scale-95 lg:hidden dark:ring-white/10 dark:hover:bg-white/10"
               onClick={() => setDrawerOpen(true)}
-              aria-label="Open menu"
+              aria-label={t.header.openMenu}
             >
               <Menu size={20} strokeWidth={1.8} />
             </button>
@@ -191,7 +199,7 @@ export function Navbar({ announcement }: { announcement?: string }) {
                         : "text-foreground/60 hover:bg-black/[0.04] hover:text-foreground dark:hover:bg-white/[0.07]"
                     )}
                   >
-                    {l.label}
+                    {t.nav[l.key]}
                     {active && (
                       <motion.span
                         layoutId="nav-active-underline"
@@ -213,17 +221,19 @@ export function Navbar({ announcement }: { announcement?: string }) {
               <button
                 className="flex h-10 w-10 items-center justify-center rounded-full text-foreground/70 ring-1 ring-black/5 transition-all hover:bg-black/[0.04] hover:text-foreground active:scale-95 md:hidden dark:ring-white/10 dark:hover:bg-white/10"
                 onClick={() => setMobileSearch((v) => !v)}
-                aria-label="Search"
+                aria-label={t.header.search}
               >
                 {mobileSearch ? <X size={18} strokeWidth={1.8} /> : <Search size={18} strokeWidth={1.8} />}
               </button>
 
               <ThemeToggle />
 
+              <LanguageToggle />
+
               {/* Wishlist */}
               <Link
                 href="/wishlist"
-                aria-label="Wishlist"
+                aria-label={t.header.wishlist}
                 className="relative flex h-10 w-10 items-center justify-center rounded-full text-foreground/70 ring-1 ring-black/5 transition-all duration-200 hover:bg-black/[0.04] hover:text-foreground active:scale-95 dark:text-foreground/70 dark:ring-white/10 dark:hover:bg-white/10 dark:hover:text-foreground"
               >
                 <Heart size={18} strokeWidth={1.8} />
@@ -233,7 +243,7 @@ export function Navbar({ announcement }: { announcement?: string }) {
               {/* Cart */}
               <Link
                 href="/cart"
-                aria-label="Cart"
+                aria-label={t.header.cart}
                 className="relative flex h-10 w-10 items-center justify-center rounded-full text-foreground/70 ring-1 ring-black/5 transition-all duration-200 hover:bg-black/[0.04] hover:text-foreground active:scale-95 dark:text-foreground/70 dark:ring-white/10 dark:hover:bg-white/10 dark:hover:text-foreground"
               >
                 <ShoppingCart size={18} strokeWidth={1.8} />
@@ -247,7 +257,7 @@ export function Navbar({ announcement }: { announcement?: string }) {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
-                      aria-label="Account"
+                      aria-label={t.header.account}
                       className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full font-bold text-[#D21F26] ring-1 ring-[#D21F26]/25 transition-transform hover:scale-105 active:scale-95"
                     >
                       {user.photoURL ? (
@@ -268,7 +278,7 @@ export function Navbar({ announcement }: { announcement?: string }) {
                   <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2">
                     <div className="px-3 py-2.5">
                       <p className="truncate text-sm font-bold">
-                        {user.displayName ?? "Customer"}
+                        {user.displayName ?? t.header.customer}
                       </p>
                       <p className="truncate text-xs text-muted-foreground">
                         {user.email}
@@ -276,17 +286,17 @@ export function Navbar({ announcement }: { announcement?: string }) {
                     </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild className="rounded-xl">
-                      <Link href="/profile">My Profile</Link>
+                      <Link href="/profile">{t.header.myProfile}</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="rounded-xl">
-                      <Link href="/orders">My Orders</Link>
+                      <Link href="/orders">{t.header.myOrders}</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="rounded-xl">
-                      <Link href="/wishlist">Wishlist</Link>
+                      <Link href="/wishlist">{t.header.wishlist}</Link>
                     </DropdownMenuItem>
                     {isAdmin && (
                       <DropdownMenuItem asChild className="rounded-xl">
-                        <Link href="/admin">Admin Dashboard</Link>
+                        <Link href="/admin">{t.header.adminDashboard}</Link>
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
@@ -294,7 +304,7 @@ export function Navbar({ announcement }: { announcement?: string }) {
                       onClick={() => signOut()}
                       className="rounded-xl text-red-600"
                     >
-                      <LogOut size={14} className="mr-2" /> Sign out
+                      <LogOut size={14} className="mr-2" /> {t.header.signOut}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -303,7 +313,7 @@ export function Navbar({ announcement }: { announcement?: string }) {
                   href="/login"
                   className="hidden rounded-full bg-[#D21F26] px-6 py-2.5 text-sm font-bold text-white shadow-[0_10px_24px_-10px_rgba(210,31,38,0.6)] transition-all hover:bg-[#a8161c] hover:shadow-[0_10px_28px_-8px_rgba(210,31,38,0.7)] active:scale-95 sm:block"
                 >
-                  Sign in
+                  {t.header.signIn}
                 </Link>
               )}
             </div>
@@ -397,7 +407,7 @@ export function Navbar({ announcement }: { announcement?: string }) {
                       >
                         <l.icon size={17} strokeWidth={1.8} />
                       </span>
-                      {l.label}
+                      {t.nav[l.key]}
                       {active && (
                         <motion.span
                           layoutId="mobile-nav-dot"
@@ -418,20 +428,20 @@ export function Navbar({ announcement }: { announcement?: string }) {
               className="mt-6"
             >
               <p className="mb-2.5 px-4 text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-                Quick Links
+                {t.header.quickLinks}
               </p>
               <div className="grid grid-cols-2 gap-2">
                 <Link
                   href="/cart"
                   className="flex items-center gap-2 rounded-2xl bg-black/[0.03] px-4 py-3 text-sm font-semibold transition hover:bg-black/[0.06] active:scale-[0.98] dark:bg-white/[0.06]"
                 >
-                  <ShoppingCart size={15} /> Cart
+                  <ShoppingCart size={15} /> {t.header.cart}
                 </Link>
                 <Link
                   href="/wishlist"
                   className="flex items-center gap-2 rounded-2xl bg-black/[0.03] px-4 py-3 text-sm font-semibold transition hover:bg-black/[0.06] active:scale-[0.98] dark:bg-white/[0.06]"
                 >
-                  <Heart size={15} /> Wishlist
+                  <Heart size={15} /> {t.header.wishlist}
                 </Link>
               </div>
             </motion.div>
@@ -447,7 +457,7 @@ export function Navbar({ announcement }: { announcement?: string }) {
                 href="/login"
                 className="flex items-center justify-center gap-2 rounded-full bg-[#D21F26] py-3 text-[15px] font-bold text-white shadow-[0_10px_24px_-10px_rgba(210,31,38,0.6)] transition active:scale-[0.98]"
               >
-                <User size={16} /> Sign in
+                <User size={16} /> {t.header.signIn}
               </Link>
             )}
             <a
@@ -456,7 +466,7 @@ export function Navbar({ announcement }: { announcement?: string }) {
               rel="noreferrer"
               className="flex items-center justify-center gap-2 rounded-full border border-black/10 py-3 text-[15px] font-semibold transition hover:bg-black/[0.03] active:scale-[0.98] dark:border-white/15 dark:hover:bg-white/[0.06]"
             >
-              <Phone size={16} /> WhatsApp Us
+              <Phone size={16} /> {t.header.whatsAppUs}
             </a>
           </motion.div>
         </SheetContent>

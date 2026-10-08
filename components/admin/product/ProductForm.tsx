@@ -67,8 +67,10 @@ const productSchema = z.object({
   baseCompareAtPrice: z.coerce.number().min(0).optional().or(z.literal("")),
   costPrice: z.coerce.number().min(0, "Cost price must be ≥ 0").optional().or(z.literal("")),
   baseStock: z.coerce.number().int().min(0, "Stock must be ≥ 0"),
+  lowStockThreshold: z.coerce.number().int().min(0, "Threshold must be ≥ 0").optional().or(z.literal("")),
   sku: z.string().min(1, "SKU is required"),
   tags: z.string().optional(),
+  videoUrl: z.string().optional(),
 });
 
 type FormValues = z.input<typeof productSchema>;
@@ -429,8 +431,10 @@ export default function ProductForm({
       baseCompareAtPrice: product?.baseCompareAtPrice ?? ("" as unknown as number),
       costPrice: product?.costPrice ?? ("" as unknown as number),
       baseStock: product?.baseStock ?? 0,
+      lowStockThreshold: product?.lowStockThreshold ?? ("" as unknown as number),
       sku: product?.sku ?? "",
       tags: (product?.tags ?? []).join(", "),
+      videoUrl: product?.videoUrl ?? "",
     },
   });
 
@@ -503,8 +507,12 @@ export default function ProductForm({
           ? {}
           : { costPrice: Number(values.costPrice) }),
         baseStock: Math.floor(Number(values.baseStock) || 0),
+        ...(values.lowStockThreshold === "" || values.lowStockThreshold == null
+          ? {}
+          : { lowStockThreshold: Math.floor(Number(values.lowStockThreshold)) }),
         sku: values.sku.trim(),
         tags,
+        videoUrl: values.videoUrl?.trim() || null,
         featured,
         published,
       };
@@ -590,6 +598,13 @@ export default function ProductForm({
               label="Product images"
               hint="(at least 1 required — first image is the cover)"
             />
+            <TextField
+              control={control}
+              name="videoUrl"
+              label="Demo video URL"
+              placeholder="YouTube link or direct mp4 URL"
+              hint="Optional — shows a video player on the product page. Huzaifa will upload the actual demo videos later."
+            />
           </CardContent>
         </Card>
 
@@ -638,6 +653,13 @@ export default function ProductForm({
               hint="Optional — shows a discount badge"
             />
             <TextField control={control} name="baseStock" label="Base stock" type="number" />
+            <TextField
+              control={control}
+              name="lowStockThreshold"
+              label="Low-stock alert at"
+              type="number"
+              hint="Optional — warn when stock falls to this level (default 10)"
+            />
             {Number(watchBasePrice) > 0 && (
               <p className="text-sm text-muted-foreground">
                 {formatPKR(Number(watchBasePrice))}

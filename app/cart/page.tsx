@@ -23,9 +23,11 @@ import { useHydratedCart } from "@/components/customer/use-hydrated-cart";
 import { fetchCollection } from "@/components/customer/data-hooks";
 import { tsMillis } from "@/components/customer/product-utils";
 import { formatPKR } from "@/lib/format";
+import { useLanguage } from "@/lib/i18n";
 import type { Coupon } from "@/lib/types";
 
 export default function CartPage() {
+  const { t } = useLanguage();
   const { lines, coupon, subtotal, discount, shipping, total, threshold } =
     useHydratedCart();
   const updateQty = useCartStore((s) => s.updateQty);
@@ -39,7 +41,7 @@ export default function CartPage() {
     const value = code.trim().toUpperCase();
     if (!value) return;
     if (!db || !isFirebaseConfigured()) {
-      toast.error("Coupons are unavailable right now");
+      toast.error(t.cart.couponsUnavailable);
       return;
     }
     setCouponBusy(true);
@@ -51,29 +53,29 @@ export default function CartPage() {
       );
       const c = rows[0];
       if (!c || !c.enabled) {
-        toast.error("Invalid coupon code");
+        toast.error(t.cart.invalidCoupon);
         return;
       }
       if (c.expiresAt && tsMillis(c.expiresAt) < Date.now()) {
-        toast.error("This coupon has expired");
+        toast.error(t.cart.couponExpired);
         return;
       }
       if (c.maxUses != null && c.usedCount >= c.maxUses) {
-        toast.error("This coupon has reached its usage limit");
+        toast.error(t.cart.couponLimit);
         return;
       }
       if (c.minOrder != null && subtotal < c.minOrder) {
-        toast.error(`Minimum order of ${formatPKR(c.minOrder)} required`);
+        toast.error(t.cart.minOrder(formatPKR(c.minOrder)));
         return;
       }
       setCoupon({ code: c.code, type: c.type, value: c.value });
       toast.success(
-        c.type === "percent"
-          ? `${c.value}% discount applied`
-          : `${formatPKR(c.value)} discount applied`
+        t.cart.discountApplied(
+          c.type === "percent" ? `${c.value}%` : formatPKR(c.value)
+        )
       );
     } catch {
-      toast.error("Could not validate coupon — please try again.");
+      toast.error(t.cart.couponValidateFailed);
     } finally {
       setCouponBusy(false);
     }
@@ -84,16 +86,16 @@ export default function CartPage() {
       <div className="container py-10">
         <Reveal>
           <h1 className="flex items-center gap-3 font-display text-3xl font-extrabold tracking-tight sm:text-4xl">
-            <ShoppingCart className="text-[#D21F26]" /> Your Cart
+            <ShoppingCart className="text-[#D21F26]" /> {t.cart.title}
           </h1>
         </Reveal>
 
         {lines.length === 0 ? (
           <div className="mt-8">
             <EmptyState
-              title="Your cart is empty"
-              description="Beautiful handcrafted furniture is waiting for you."
-              actionLabel="Start Shopping"
+              title={t.cart.empty}
+              description={t.cart.emptySub}
+              actionLabel={t.cart.startShopping}
               actionHref="/shop"
             />
           </div>
@@ -127,14 +129,14 @@ export default function CartPage() {
                         href={`/product/${l.productId}`}
                         className="font-display font-bold hover:text-[#D21F26]"
                       >
-                        {l.name === l.productId ? "Loading…" : l.name}
+                        {l.name === l.productId ? t.cart.loading : l.name}
                       </Link>
                       <button
                         onClick={() => {
                           removeLine(l.key);
-                          toast("Item removed");
+                          toast(t.cart.itemRemoved);
                         }}
-                        aria-label="Remove item"
+                        aria-label={t.cart.removeItem}
                         className="rounded-full p-2 text-muted-foreground transition hover:bg-red-50 hover:text-red-600"
                       >
                         <Trash2 size={16} />
@@ -151,7 +153,7 @@ export default function CartPage() {
                       <div className="flex items-center gap-1 rounded-full border px-1.5 py-1">
                         <button
                           onClick={() => updateQty(l.key, l.qty - 1)}
-                          aria-label="Decrease quantity"
+                          aria-label={t.product.decreaseQty}
                           className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-muted"
                         >
                           <Minus size={14} />
@@ -159,7 +161,7 @@ export default function CartPage() {
                         <span className="min-w-8 text-center font-extrabold">{l.qty}</span>
                         <button
                           onClick={() => updateQty(l.key, l.qty + 1)}
-                          aria-label="Increase quantity"
+                          aria-label={t.product.increaseQty}
                           className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-muted"
                         >
                           <Plus size={14} />
@@ -177,7 +179,7 @@ export default function CartPage() {
             {/* Summary */}
             <div className="lg:sticky lg:top-24 lg:self-start">
               <div className="rounded-3xl border bg-card p-6">
-                <h2 className="font-display text-lg font-extrabold">Order Summary</h2>
+                <h2 className="font-display text-lg font-extrabold">{t.cart.orderSummary}</h2>
 
                 {/* Coupon */}
                 {coupon ? (
@@ -190,7 +192,7 @@ export default function CartPage() {
                         setCoupon(null);
                         setCode("");
                       }}
-                      aria-label="Remove coupon"
+                      aria-label={t.cart.removeItem}
                       className="rounded-full p-1 hover:bg-green-100 dark:hover:bg-green-900"
                     >
                       <X size={15} />
@@ -201,7 +203,7 @@ export default function CartPage() {
                     <Input
                       value={code}
                       onChange={(e) => setCode(e.target.value.toUpperCase())}
-                      placeholder="Coupon code"
+                      placeholder={t.cart.couponCode}
                       className="rounded-xl uppercase"
                       onKeyDown={(e) => e.key === "Enter" && applyCoupon()}
                     />
@@ -210,27 +212,27 @@ export default function CartPage() {
                       disabled={couponBusy || !code.trim()}
                       className="shrink-0 rounded-xl bg-stone-900 hover:bg-stone-700"
                     >
-                      {couponBusy ? <Loader2 size={16} className="animate-spin" /> : "Apply"}
+                      {couponBusy ? <Loader2 size={16} className="animate-spin" /> : t.cart.apply}
                     </Button>
                   </div>
                 )}
 
                 <dl className="mt-5 space-y-2.5 text-sm">
                   <div className="flex justify-between">
-                    <dt className="text-muted-foreground">Subtotal</dt>
+                    <dt className="text-muted-foreground">{t.cart.subtotal}</dt>
                     <dd className="font-bold">{formatPKR(subtotal)}</dd>
                   </div>
                   {discount > 0 && (
                     <div className="flex justify-between text-green-600 dark:text-green-400">
-                      <dt>Coupon discount</dt>
+                      <dt>{t.cart.couponDiscount}</dt>
                       <dd className="font-bold">−{formatPKR(discount)}</dd>
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <dt className="text-muted-foreground">Shipping</dt>
+                    <dt className="text-muted-foreground">{t.cart.shipping}</dt>
                     <dd className="font-bold">
                       {shipping === 0 ? (
-                        <span className="text-green-600 dark:text-green-400">FREE</span>
+                        <span className="text-green-600 dark:text-green-400">{t.cart.free}</span>
                       ) : (
                         formatPKR(shipping)
                       )}
@@ -238,12 +240,11 @@ export default function CartPage() {
                   </div>
                   {shipping > 0 && (
                     <p className="text-xs text-muted-foreground">
-                      Add {formatPKR(threshold - (subtotal - discount))} more for free
-                      shipping.
+                      {t.cart.freeShippingMore(formatPKR(threshold - (subtotal - discount)))}
                     </p>
                   )}
                   <div className="flex justify-between border-t pt-3 text-base">
-                    <dt className="font-display font-extrabold">Total</dt>
+                    <dt className="font-display font-extrabold">{t.cart.total}</dt>
                     <dd className="font-display text-xl font-extrabold text-[#D21F26]">
                       {formatPKR(total)}
                     </dd>
@@ -255,14 +256,14 @@ export default function CartPage() {
                   className="mt-5 w-full rounded-full bg-[#D21F26] py-6 text-base font-bold hover:bg-[#a8161c]"
                 >
                   <Link href="/checkout">
-                    Proceed to Checkout <ArrowRight size={18} />
+                    {t.cart.proceedToCheckout} <ArrowRight size={18} className="rtl:rotate-180" />
                   </Link>
                 </Button>
                 <Link
                   href="/shop"
                   className="mt-3 block text-center text-sm font-medium text-muted-foreground hover:text-foreground"
                 >
-                  Continue shopping
+                  {t.cart.continueShopping}
                 </Link>
               </div>
             </div>

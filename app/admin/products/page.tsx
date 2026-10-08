@@ -252,9 +252,26 @@ export default function ProductsPage() {
                     <TableCell className="text-sm">{catMap.get(p.categoryId) ?? "—"}</TableCell>
                     <TableCell className="font-semibold">{formatPKR(p.basePrice)}</TableCell>
                     <TableCell>
-                      <span className={(p.baseStock ?? 0) < 10 ? "font-bold text-amber-600" : ""}>
-                        {p.combinations?.length ? `— (${p.combinations.length} combos)` : p.baseStock ?? 0}
-                      </span>
+                      {(() => {
+                        const threshold = p.lowStockThreshold ?? 10;
+                        const hasCombos = (p.combinations?.length ?? 0) > 0;
+                        const stock = p.baseStock ?? 0;
+                        const isLow = hasCombos
+                          ? p.combinations.some((c) => c.stock <= threshold)
+                          : stock <= threshold;
+                        return (
+                          <span className="flex items-center gap-2">
+                            <span className={isLow ? "font-bold text-amber-600" : ""}>
+                              {hasCombos ? `— (${p.combinations.length} combos)` : stock}
+                            </span>
+                            {isLow && (
+                              <Badge variant="destructive" className="text-[10px]">
+                                Low
+                              </Badge>
+                            )}
+                          </span>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell>
                       <Badge variant={p.published ? "default" : "secondary"}>

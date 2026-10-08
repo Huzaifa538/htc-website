@@ -120,8 +120,11 @@ export const productSchema = z.object({
   baseCompareAtPrice: z.number().min(0).max(1e9).nullable().optional(),
   costPrice: z.number().min(0).max(1e9).nullable().optional(),
   baseStock: z.number().int().min(0, "Stock must be ≥ 0").max(1e9),
+  lowStockThreshold: z.number().int().min(0).max(1e9).optional(),
   sku: z.string().trim().min(1, "SKU is required").max(60),
   tags: z.array(z.string().trim().min(1).max(60)).max(30),
+  /** Demo video URL (YouTube or direct mp4). Optional — empty hides the video section. */
+  videoUrl: z.string().trim().max(2000).nullish(),
   featured: z.boolean(),
   published: z.boolean(),
 });

@@ -28,6 +28,7 @@ import {
   Images,
   ShoppingCart,
   BarChart3,
+  TrendingUp,
   Wallet,
   Users,
   MessageSquare,
@@ -52,6 +53,8 @@ import {
   Truck,
   Store,
   Ticket,
+  Zap,
+  Gift,
   type LucideIcon,
 } from "lucide-react";
 
@@ -114,6 +117,8 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
       { href: "/admin/quotations", label: "Quotations", icon: FileText },
       { href: "/admin/coupons", label: "Coupons", icon: Ticket },
+      { href: "/admin/flash-sales", label: "Flash Sales", icon: Zap },
+      { href: "/admin/combos", label: "Combo Deals", icon: Gift },
       { href: "/admin/courier", label: "Courier", icon: Truck },
       { href: "/admin/customers", label: "Customers", icon: Users },
       { href: "/admin/mtr/messages", label: "MTR Messages", icon: MessageSquare },
@@ -128,6 +133,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/admin/appointments", label: "Appointments", icon: CalendarCheck },
       { href: "/admin/htc/messages", label: "HTC Messages", icon: MessageSquare },
       { href: "/admin/reports", label: "Reports", icon: BarChart3 },
+      { href: "/admin/profit", label: "Profit", icon: TrendingUp },
       { href: "/admin/expenses", label: "Expenses", icon: Wallet },
       { href: "/admin/staff", label: "Staff", icon: KeyRound },
       { href: "/admin/reviews", label: "Reviews", icon: Star },

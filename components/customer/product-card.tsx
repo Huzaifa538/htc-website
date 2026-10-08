@@ -41,6 +41,9 @@ import {
 } from "@/components/customer/product-utils";
 import { Stars } from "@/components/customer/stars";
 import { QuickView } from "@/components/customer/quick-view";
+import { WhatsAppOrderButton } from "@/components/customer/whatsapp-order-button";
+import { useActiveFlashSale } from "@/components/flash-sale-banner";
+import { applyFlashSale } from "@/lib/flash-sale";
 
 const TILT_MAX = 8; // degrees
 
@@ -131,6 +134,10 @@ export function ProductCard({ product }: { product: WithId<Product> }) {
 
   const price = getProductPrice(product);
   const href = `/product/${product.slug || product.id}`;
+  // Flash sale: show discounted price with strikethrough original.
+  const flashSale = useActiveFlashSale();
+  const salePrice = flashSale ? applyFlashSale(price.price, flashSale) : price.price;
+  const onSale = flashSale != null && salePrice < price.price;
   const hasVariants = product.variantTypes.length > 0;
   const outOfStock = price.stock <= 0;
   // Contact-for-price items: no cart actions, WhatsApp inquiry instead.
@@ -360,12 +367,18 @@ export function ProductCard({ product }: { product: WithId<Product> }) {
 
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <span className="rounded-full bg-[#D21F26] px-3.5 py-1.5 text-sm font-extrabold text-white shadow-sm">
-                    {formatPrice(price.price)}
+                    {formatPrice(onSale ? salePrice : price.price)}
                   </span>
-                  {price.compareAt && (
+                  {onSale ? (
                     <s className="text-sm text-muted-foreground">
-                      {formatPrice(price.compareAt)}
+                      {formatPrice(price.price)}
                     </s>
+                  ) : (
+                    price.compareAt && (
+                      <s className="text-sm text-muted-foreground">
+                        {formatPrice(price.compareAt)}
+                      </s>
+                    )
                   )}
                 </div>
 
@@ -393,6 +406,20 @@ export function ProductCard({ product }: { product: WithId<Product> }) {
                   >
                     <ShoppingCart size={16} /> Add to Cart
                   </button>
+                )}
+                {/* WhatsApp direct order */}
+                {!zeroPrice && !outOfStock && (
+                  <WhatsAppOrderButton
+                    productName={product.name}
+                    priceLabel={formatPrice(onSale ? salePrice : price.price)}
+                    productUrl={
+                      typeof window !== "undefined"
+                        ? `${window.location.origin}${href}`
+                        : href
+                    }
+                    size="compact"
+                    className="mt-2 w-full"
+                  />
                 )}
               </div>
             </div>
@@ -447,10 +474,14 @@ export function ProductCard({ product }: { product: WithId<Product> }) {
               <div className="mt-auto pt-4">
                 <div className="flex items-center gap-2">
                   <span className="rounded-full bg-[#D21F26] px-3.5 py-1.5 text-sm font-extrabold text-white">
-                    {formatPrice(price.price)}
+                    {formatPrice(onSale ? salePrice : price.price)}
                   </span>
-                  {price.compareAt && (
-                    <s className="text-sm text-muted-foreground">{formatPrice(price.compareAt)}</s>
+                  {onSale ? (
+                    <s className="text-sm text-muted-foreground">{formatPrice(price.price)}</s>
+                  ) : (
+                    price.compareAt && (
+                      <s className="text-sm text-muted-foreground">{formatPrice(price.compareAt)}</s>
+                    )
                   )}
                 </div>
                 <div className="mt-3 flex gap-2">

@@ -11,9 +11,11 @@ import { Search } from "lucide-react";
 import { formatPKR } from "@/lib/format";
 import { getProductPrice, primaryImage } from "@/components/customer/product-utils";
 import { useProducts } from "@/components/customer/data-hooks";
+import { useLanguage } from "@/lib/i18n";
 
 export function SearchBar({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
+  const { t } = useLanguage();
   const { products } = useProducts();
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
@@ -54,17 +56,17 @@ export function SearchBar({ compact = false }: { compact?: boolean }) {
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={(e) => e.key === "Enter" && submit()}
-          placeholder="Search sofas, tables, decor…"
+          placeholder={t.search.placeholder}
           className={
             compact
               ? "w-full bg-transparent px-3 py-1.5 text-sm outline-none placeholder:text-muted-foreground"
               : "w-full bg-transparent px-4 py-2 text-sm outline-none placeholder:text-muted-foreground"
           }
-          aria-label="Search products"
+          aria-label={t.header.search}
         />
         <button
           onClick={submit}
-          aria-label="Search"
+          aria-label={t.header.search}
           className="mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#D21F26] text-white transition hover:bg-[#a8161c]"
         >
           <Search size={16} />
@@ -106,7 +108,7 @@ export function SearchBar({ compact = false }: { compact?: boolean }) {
             onClick={submit}
             className="w-full border-t px-3 py-2.5 text-center text-sm font-semibold text-[#D21F26] transition hover:bg-muted"
           >
-            See all results for “{q.trim()}”
+            {t.search.seeAllResults(q.trim())}
           </button>
         </div>
       )}

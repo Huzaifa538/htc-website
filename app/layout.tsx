@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Poppins, Inter } from "next/font/google";
+import { Poppins, Inter, Noto_Nastaliq_Urdu } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
+import { LanguageProvider } from "@/lib/i18n";
 import { Toaster } from "@/components/ui/sonner";
 import {
   DEFAULT_DESCRIPTION,
@@ -24,6 +25,15 @@ const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-inter",
+  display: "swap",
+});
+
+// Urdu typeface for the اردو language toggle (loaded always, applied
+// only when <html lang="ur"> via globals.css).
+const urduFont = Noto_Nastaliq_Urdu({
+  subsets: ["arabic"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-urdu",
   display: "swap",
 });
 
@@ -151,6 +161,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Apply the saved language direction before first paint so
+            Urdu (RTL) never flashes as LTR. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var l=localStorage.getItem('htc-lang');if(l==='ur'){document.documentElement.lang='ur';document.documentElement.dir='rtl';}}catch(e){}})();`,
+          }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
@@ -164,11 +181,13 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
       </head>
-      <body className={`${poppins.variable} ${inter.variable} antialiased`}>
-        <Providers>
-          {children}
-          <Toaster richColors position="top-center" />
-        </Providers>
+      <body className={`${poppins.variable} ${inter.variable} ${urduFont.variable} antialiased`}>
+        <LanguageProvider>
+          <Providers>
+            {children}
+            <Toaster richColors position="top-center" />
+          </Providers>
+        </LanguageProvider>
       </body>
     </html>
   );

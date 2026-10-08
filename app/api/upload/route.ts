@@ -8,7 +8,8 @@
  * - Admins (htc_admin=1 httpOnly cookie, minted by POST /api/auth/session)
  *   may upload to any folder.
  * - Signed-in customers (valid Firebase ID token) may upload images to the
- *   `chat/` folder only (chat image attachments).
+ *   `chat/` folder (chat image attachments) or the `reviews/` folder
+ *   (customer review photos — validated client-side as images only).
  *
  * Validation: images (jpeg/png/webp/gif) and videos (mp4/webm/quicktime),
  * max 10 MB. Returns { url } with the public Blob URL.
@@ -109,7 +110,7 @@ async function handleUpload(
     );
   }
 
-  // Customers are sandboxed to the chat folder; admins may choose.
+  // Customers are sandboxed to the chat + reviews folders; admins may choose.
   let folder = "uploads";
   if (auth.admin) {
     const requested = form.get("folder");
@@ -117,7 +118,11 @@ async function handleUpload(
       folder = sanitizeFilename(requested).replace(/^\.+/, "") || "uploads";
     }
   } else {
-    folder = "chat";
+    const requested = form.get("folder");
+    folder =
+      typeof requested === "string" && requested === "reviews"
+        ? "reviews"
+        : "chat";
   }
 
   const pathname = `${folder}/${Date.now()}-${sanitizeFilename(file.name)}`;

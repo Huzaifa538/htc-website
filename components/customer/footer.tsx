@@ -24,26 +24,28 @@ import {
 } from "@/components/customer/social-icons";
 import { db, isFirebaseConfigured } from "@/lib/firebase/client";
 import { useSiteSettings } from "@/components/customer/data-hooks";
+import { useLanguage } from "@/lib/i18n";
 
 const QUICK_LINKS = [
-  { href: "/shop", label: "Shop" },
-  { href: "/services", label: "Services" },
-  { href: "/projects", label: "Projects" },
-  { href: "/gallery", label: "Gallery" },
-  { href: "/about", label: "About Us" },
-  { href: "/contact", label: "Contact" },
-];
+  { href: "/shop", key: "shop" },
+  { href: "/services", key: "services" },
+  { href: "/projects", key: "projects" },
+  { href: "/gallery", key: "gallery" },
+  { href: "/about", key: "aboutUs" },
+  { href: "/contact", key: "contact" },
+] as const;
 
 const SUPPORT_LINKS = [
-  { href: "/faq", label: "FAQ" },
-  { href: "/orders", label: "Track Order" },
-  { href: "/refunds", label: "Refund Policy" },
-  { href: "/privacy", label: "Privacy Policy" },
-  { href: "/terms", label: "Terms of Service" },
-];
+  { href: "/faq", key: "faq" },
+  { href: "/orders", key: "trackOrder" },
+  { href: "/refunds", key: "refundPolicy" },
+  { href: "/privacy", key: "privacyPolicy" },
+  { href: "/terms", key: "termsOfService" },
+] as const;
 
 export function Footer() {
   const { settings } = useSiteSettings();
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -58,7 +60,7 @@ export function Footer() {
     e.preventDefault();
     const value = email.trim();
     if (!/^\S+@\S+\.\S+$/.test(value)) {
-      toast.error("Please enter a valid email address");
+      toast.error(t.footer.validEmail);
       return;
     }
     setBusy(true);
@@ -70,15 +72,15 @@ export function Footer() {
           email: value,
           createdAt: serverTimestamp(),
         });
-        toast.success("Subscribed! Welcome to the HTC family.");
+        toast.success(t.footer.subscribed);
       } else if (settings?.email) {
         window.location.href = `mailto:${settings.email}?subject=Newsletter%20subscribe&body=Please%20subscribe%20${encodeURIComponent(value)}`;
       } else {
-        toast.success("Thanks! We'll keep you posted.");
+        toast.success(t.footer.thanksPosted);
       }
       setEmail("");
     } catch {
-      toast.error("Subscription failed — please try again.");
+      toast.error(t.footer.subscribeFailed);
     } finally {
       setBusy(false);
     }
@@ -102,8 +104,7 @@ export function Footer() {
             </p>
           </div>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-stone-400">
-            Premium door hardware, locks, handles and fittings — delivered
-            across Pakistan, crafted for Pakistani homes and businesses.
+            {t.footer.tagline}
           </p>
           <div className="mt-5 flex gap-2">
             {socials.map((s) => (
@@ -124,13 +125,13 @@ export function Footer() {
         {/* Quick links */}
         <div>
           <h4 className="font-display text-sm font-bold uppercase tracking-widest text-white">
-            Quick Links
+            {t.footer.quickLinks}
           </h4>
           <ul className="mt-4 space-y-2.5 text-sm">
             {QUICK_LINKS.map((l) => (
               <li key={l.href}>
                 <Link href={l.href} className="text-stone-400 transition hover:text-white">
-                  {l.label}
+                  {t.footer[l.key]}
                 </Link>
               </li>
             ))}
@@ -140,13 +141,13 @@ export function Footer() {
         {/* Support */}
         <div>
           <h4 className="font-display text-sm font-bold uppercase tracking-widest text-white">
-            Support
+            {t.footer.support}
           </h4>
           <ul className="mt-4 space-y-2.5 text-sm">
             {SUPPORT_LINKS.map((l) => (
               <li key={l.href}>
                 <Link href={l.href} className="text-stone-400 transition hover:text-white">
-                  {l.label}
+                  {t.footer[l.key]}
                 </Link>
               </li>
             ))}
@@ -156,7 +157,7 @@ export function Footer() {
         {/* Contact + newsletter */}
         <div>
           <h4 className="font-display text-sm font-bold uppercase tracking-widest text-white">
-            Get in touch
+            {t.footer.getInTouch}
           </h4>
           <ul className="mt-4 space-y-2.5 text-sm text-stone-400">
             {settings?.phone && (
@@ -178,20 +179,20 @@ export function Footer() {
           </ul>
           <form onSubmit={subscribe} className="mt-5">
             <p className="mb-2 text-sm font-semibold text-white">
-              Deals & new arrivals in your inbox
+              {t.footer.dealsInbox}
             </p>
             <div className="flex overflow-hidden rounded-full bg-white/10 p-1 ring-1 ring-white/10 focus-within:ring-[#D21F26]">
               <input
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Your email"
+                placeholder={t.footer.yourEmail}
                 type="email"
                 className="w-full bg-transparent px-3 text-sm text-white outline-none placeholder:text-stone-500"
               />
               <button
                 type="submit"
                 disabled={busy}
-                aria-label="Subscribe"
+                aria-label={t.footer.subscribe}
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#D21F26] text-white transition hover:bg-[#a8161c] disabled:opacity-50"
               >
                 <Send size={15} />
@@ -204,16 +205,15 @@ export function Footer() {
       <div className="border-t border-white/10">
         <div className="container flex flex-col items-center justify-between gap-2 py-5 text-xs text-stone-500 sm:flex-row">
           <p>
-            © {new Date().getFullYear()} {settings?.siteName ?? "HTC — Hammer Trading"}. All
-            rights reserved.
+            {t.footer.rightsReserved(new Date().getFullYear(), settings?.siteName ?? "HTC — Hammer Trading")}
           </p>
           <p className="text-stone-600 dark:text-stone-400">
-            MTR Store — hardware retail by Hammer Trading Company
+            {t.footer.mtrLine}
           </p>
           <p className="flex gap-4">
-            <Link href="/privacy" className="hover:text-white">Privacy</Link>
-            <Link href="/terms" className="hover:text-white">Terms</Link>
-            <Link href="/refunds" className="hover:text-white">Refunds</Link>
+            <Link href="/privacy" className="hover:text-white">{t.footer.privacy}</Link>
+            <Link href="/terms" className="hover:text-white">{t.footer.terms}</Link>
+            <Link href="/refunds" className="hover:text-white">{t.footer.refunds}</Link>
           </p>
         </div>
       </div>

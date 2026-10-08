@@ -74,6 +74,32 @@
   h6 {
     @apply font-display;
   }
+
+  /* Urdu mode — Nastaliq typeface with generous line spacing (the
+     script's tall glyphs need it). Applies whenever the language
+     toggle sets <html lang="ur">. */
+  html[lang="ur"] body {
+    font-family: var(--font-urdu), var(--font-inter), ui-sans-serif,
+      system-ui, sans-serif;
+    line-height: 2;
+  }
+  html[lang="ur"] h1,
+  html[lang="ur"] h2,
+  html[lang="ur"] h3,
+  html[lang="ur"] h4,
+  html[lang="ur"] h5,
+  html[lang="ur"] h6,
+  html[lang="ur"] .font-display {
+    font-family: var(--font-urdu), var(--font-inter), ui-sans-serif,
+      sans-serif;
+    line-height: 2.1;
+  }
+  html[lang="ur"] input,
+  html[lang="ur"] textarea,
+  html[lang="ur"] select,
+  html[lang="ur"] button {
+    line-height: 1.9;
+  }
 }
 
 @layer utilities {

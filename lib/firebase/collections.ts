@@ -23,6 +23,8 @@ export const COLLECTIONS = {
   aboutContent: "aboutContent",
   siteSettings: "siteSettings",
   coupons: "coupons",
+  flashSales: "flashSales",
+  combos: "combos",
   chats: "chats",
   notifications: "notifications",
   contactMessages: "contactMessages",

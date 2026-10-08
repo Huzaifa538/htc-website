@@ -8,6 +8,8 @@
  */
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { toast } from "sonner";
 import {
   AreaChart,
   Area,
@@ -34,9 +36,11 @@ import {
   MessageSquare,
   ClipboardList,
   ArrowRight,
+  Plus,
 } from "lucide-react";
 
 import { isFirebaseConfigured } from "@/lib/firebase/client";
+import { db } from "@/lib/firebase/client";
 import { COLLECTIONS } from "@/lib/firebase/collections";
 import type {
   AppUser,
@@ -64,7 +68,17 @@ import {
 } from "@/components/admin/ui";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -220,26 +234,65 @@ export default function AdminDashboard() {
   );
 
   const lowStock = useMemo(() => {
-    const threshold = 10;
-    const out: { id: string; name: string; stock: number; detail: string }[] = [];
+    const out: { id: string; productId: string; name: string; stock: number; detail: string; threshold: number; isCombo: boolean }[] = [];
     for (const p of products) {
+      const threshold = p.lowStockThreshold ?? 10;
       if ((p.combinations?.length ?? 0) > 0) {
         for (const c of p.combinations) {
-          if (c.stock < threshold) {
+          if (c.stock <= threshold) {
             out.push({
               id: `${p.id}-${c.id}`,
+              productId: p.id,
               name: p.name,
               stock: c.stock,
               detail: Object.values(c.options).join(" / "),
+              threshold,
+              isCombo: true,
             });
           }
         }
-      } else if ((p.baseStock ?? 0) < threshold) {
-        out.push({ id: p.id, name: p.name, stock: p.baseStock ?? 0, detail: "Base stock" });
+      } else if ((p.baseStock ?? 0) <= threshold) {
+        out.push({
+          id: p.id,
+          productId: p.id,
+          name: p.name,
+          stock: p.baseStock ?? 0,
+          detail: "Base stock",
+          threshold,
+          isCombo: false,
+        });
       }
     }
     return out.sort((a, b) => a.stock - b.stock).slice(0, 8);
   }, [products]);
+
+  // quick restock dialog state
+  const [restockItem, setRestockItem] = useState<{ productId: string; name: string; stock: number } | null>(null);
+  const [restockQty, setRestockQty] = useState("");
+  const [restocking, setRestocking] = useState(false);
+
+  const doRestock = async () => {
+    if (!restockItem || !db) return;
+    const qty = Math.floor(Number(restockQty));
+    if (!qty || qty <= 0) {
+      toast.error("Enter a valid quantity.");
+      return;
+    }
+    setRestocking(true);
+    try {
+      const ref = doc(db, COLLECTIONS.products, restockItem.productId);
+      const snap = await getDoc(ref);
+      const current = (snap.data()?.baseStock ?? 0) as number;
+      await updateDoc(ref, { baseStock: current + qty, updatedAt: serverTimestamp() });
+      toast.success(`Stock updated: ${current} → ${current + qty}`);
+      setRestockItem(null);
+      setRestockQty("");
+    } catch {
+      toast.error("Restock failed.");
+    } finally {
+      setRestocking(false);
+    }
+  };
 
   const recentMessages = useMemo(() => {
     const msgs = (contactMsgs ?? []).map((m) => ({
@@ -536,19 +589,35 @@ export default function AdminDashboard() {
             ) : (
               <div className="space-y-2">
                 {lowStock.map((s) => (
-                  <Link
+                  <div
                     key={s.id}
-                    href={`/admin/products/${s.id.split("-")[0]}`}
-                    className="flex items-center justify-between rounded-lg border p-2.5 text-sm hover:bg-muted/50"
+                    className="flex items-center justify-between gap-2 rounded-lg border p-2.5 text-sm"
                   >
-                    <div className="min-w-0">
+                    <Link
+                      href={`/admin/products/${s.productId}`}
+                      className="min-w-0 flex-1 hover:bg-muted/50 rounded"
+                    >
                       <p className="truncate font-medium">{s.name}</p>
-                      <p className="text-xs text-muted-foreground">{s.detail}</p>
-                    </div>
-                    <span className={`font-bold ${s.stock <= 0 ? "text-destructive" : "text-amber-600"}`}>
+                      <p className="text-xs text-muted-foreground">
+                        {s.detail} · alert at {s.threshold}
+                      </p>
+                    </Link>
+                    <span className={`shrink-0 font-bold ${s.stock <= 0 ? "text-destructive" : "text-amber-600"}`}>
                       {s.stock} left
                     </span>
-                  </Link>
+                    {!s.isCombo && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setRestockItem({ productId: s.productId, name: s.name, stock: s.stock });
+                          setRestockQty("");
+                        }}
+                      >
+                        <Plus className="mr-1 h-3.5 w-3.5" /> Restock
+                      </Button>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
@@ -602,6 +671,37 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* quick restock dialog */}
+      <Dialog open={restockItem !== null} onOpenChange={(o) => !o && setRestockItem(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Restock — {restockItem?.name}</DialogTitle>
+            <DialogDescription>
+              Current stock: {restockItem?.stock}. Enter how many units to add.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <Label htmlFor="restock-qty">Quantity to add</Label>
+            <Input
+              id="restock-qty"
+              type="number"
+              min={1}
+              placeholder="e.g. 50"
+              value={restockQty}
+              onChange={(e) => setRestockQty(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRestockItem(null)}>
+              Cancel
+            </Button>
+            <Button onClick={() => void doRestock()} disabled={restocking}>
+              {restocking ? "Updating…" : "Add stock"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

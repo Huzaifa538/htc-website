@@ -148,6 +148,20 @@ export default function ReviewsPage() {
                         <p className="mt-1 line-clamp-3 text-sm text-muted-foreground">
                           {r.comment}
                         </p>
+                        {r.images && r.images.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {r.images.map((src) => (
+                              <a key={src} href={src} target="_blank" rel="noreferrer">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={src}
+                                  alt="Review photo"
+                                  className="h-12 w-12 rounded-lg border object-cover transition hover:opacity-80"
+                                />
+                              </a>
+                            ))}
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell>
                         <code className="rounded bg-muted px-2 py-0.5 font-mono text-xs">
