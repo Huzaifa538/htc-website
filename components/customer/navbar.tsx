@@ -30,7 +30,6 @@ import {
   Sparkles,
   Sun,
   User,
-  X,
 } from "lucide-react";
 import { useAuth } from "@/components/providers";
 import { useLanguage } from "@/lib/i18n";
@@ -113,7 +112,6 @@ export function Navbar({ announcement }: { announcement?: string }) {
   );
   const wishlistCount = useWishlistStore((s) => s.productIds.length);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [mobileSearch, setMobileSearch] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   // Storefront routes are branded as the MTR Store; company pages stay HTC.
   const shopBrand = isShopRoute(pathname);
@@ -236,17 +234,20 @@ export function Navbar({ announcement }: { announcement?: string }) {
             </nav>
 
             <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-              {/* Desktop search */}
-              <div className="hidden w-52 md:block xl:w-72">
-                <SearchBar compact />
+              {/* Search — icon only, dropdown on click */}
+              <div className="group relative">
+                <button
+                  className="flex h-10 w-10 items-center justify-center rounded-full text-foreground/70 ring-1 ring-black/5 transition-all hover:bg-black/[0.04] hover:text-foreground active:scale-95 dark:ring-white/10 dark:hover:bg-white/10"
+                  aria-label={t.header.search}
+                >
+                  <Search size={18} strokeWidth={1.8} />
+                </button>
+                <div className="invisible absolute right-0 top-full z-50 w-72 translate-y-1 pt-2 opacity-0 transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
+                  <div className="rounded-2xl border border-black/5 bg-white p-3 shadow-xl dark:border-white/10 dark:bg-stone-900">
+                    <SearchBar compact />
+                  </div>
+                </div>
               </div>
-              <button
-                className="flex h-10 w-10 items-center justify-center rounded-full text-foreground/70 ring-1 ring-black/5 transition-all hover:bg-black/[0.04] hover:text-foreground active:scale-95 md:hidden dark:ring-white/10 dark:hover:bg-white/10"
-                onClick={() => setMobileSearch((v) => !v)}
-                aria-label={t.header.search}
-              >
-                {mobileSearch ? <X size={18} strokeWidth={1.8} /> : <Search size={18} strokeWidth={1.8} />}
-              </button>
 
               <ThemeToggle />
 
@@ -340,23 +341,6 @@ export function Navbar({ announcement }: { announcement?: string }) {
               )}
             </div>
           </div>
-
-          {/* Mobile search row */}
-          <AnimatePresence>
-            {mobileSearch && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.22, ease: "easeOut" }}
-                className="overflow-hidden border-t border-black/[0.06] md:hidden dark:border-white/[0.08]"
-              >
-                <div className="container py-3">
-                  <SearchBar />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       </motion.header>
 
