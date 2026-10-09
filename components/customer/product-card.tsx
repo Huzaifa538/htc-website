@@ -77,7 +77,9 @@ function HeartBurst({ show }: { show: boolean }) {
 export function ProductCard({ product }: { product: WithId<Product> }) {
   const router = useRouter();
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  // Urdu mode mein Urdu naam dikhao agar available ho
+  const displayName = lang === "ur" && product.urduName ? product.urduName : product.name;
   const addLine = useCartStore((s) => s.addLine);
   const toggleWishlist = useWishlistStore((s) => s.toggle);
   const wished = useWishlistStore((s) => s.productIds.includes(product.id));
@@ -364,7 +366,7 @@ export function ProductCard({ product }: { product: WithId<Product> }) {
                   </span>
                 </div>
                 <Link href={href} className="mt-1.5 line-clamp-2 min-h-[2.6em] font-display text-[15px] font-semibold leading-snug hover:text-[#D21F26]">
-                  {product.name}
+                  {displayName}
                 </Link>
 
                 <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -437,7 +439,7 @@ export function ProductCard({ product }: { product: WithId<Product> }) {
               </button>
 
               <p className="pr-8 font-display text-base font-extrabold leading-snug">
-                {product.name}
+                {displayName}
               </p>
               <div className="mt-1.5 flex items-center gap-1.5">
                 <Stars rating={product.rating} />

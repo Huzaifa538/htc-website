@@ -52,16 +52,16 @@ const LINKS = [
   { href: "/", key: "home", icon: Home },
   { href: "/shop", key: "shop", icon: LayoutGrid },
   { href: "/combos", key: "combos", icon: Gift },
-  { href: "/portfolio", key: "portfolio", icon: Images },
+  { href: "/about", key: "about", icon: Info },
   { href: "/contact", key: "contact", icon: Mail },
 ] as const;
 
-// Kam important links — "More" dropdown mein
+// Service wale links — "Services" dropdown mein
 const MORE_LINKS = [
   { href: "/services", key: "services", icon: Sparkles },
   { href: "/projects", key: "projects", icon: Package },
+  { href: "/portfolio", key: "portfolio", icon: Images },
   { href: "/gallery", key: "gallery", icon: Search },
-  { href: "/about", key: "about", icon: Info },
 ] as const;
 
 const ACCENT = "#D21F26";
@@ -213,10 +213,10 @@ export function Navbar({ announcement }: { announcement?: string }) {
                   </Link>
                 );
               })}
-              {/* More dropdown — kam important links */}
+              {/* Services dropdown */}
               <div className="group relative">
-                <button className="relative whitespace-nowrap rounded-full px-2.5 py-2 text-[12px] font-semibold tracking-wide text-foreground/60 transition-all duration-200 hover:bg-black/[0.04] hover:text-foreground dark:hover:bg-white/[0.07]">
-                  {t.nav.more || "More"} ▾
+                <button className="relative whitespace-nowrap rounded-full px-4 py-2.5 text-[13px] font-semibold tracking-wide text-foreground/60 transition-all duration-200 hover:bg-black/[0.04] hover:text-foreground dark:hover:bg-white/[0.07]">
+                  {t.nav.services} ▾
                 </button>
                 <div className="invisible absolute right-0 top-full z-50 w-44 translate-y-1 rounded-2xl border border-black/5 bg-white p-1.5 opacity-0 shadow-xl transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 dark:border-white/10 dark:bg-stone-900">
                   {MORE_LINKS.map((l) => (
