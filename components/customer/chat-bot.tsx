@@ -11,6 +11,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { MessageCircle, Send, X } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
+import { useChatUiStore } from "@/lib/store/chat-ui";
 import type { Dictionary } from "@/lib/i18n/en";
 
 interface Msg {
@@ -62,6 +63,13 @@ export function ChatBot() {
   const [input, setInput] = useState("");
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const openAdminChat = useChatUiStore((s) => s.openChat);
+
+  // Admin se baat — bot band karo, messaging chat kholo
+  function talkToAdmin() {
+    setOpen(false);
+    openAdminChat();
+  }
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -107,6 +115,13 @@ export function ChatBot() {
               <p className="font-bold">{t.chatBot.title}</p>
               <p className="text-xs opacity-80">{t.chatBot.subtitle}</p>
             </div>
+
+            <button
+              onClick={talkToAdmin}
+              className="mx-3 mt-2 rounded-full border border-[#7C3AED]/40 bg-violet-50 px-3 py-1.5 text-xs font-bold text-[#7C3AED] transition hover:bg-violet-100 dark:bg-violet-950/40"
+            >
+              {t.chatBot.talkToAdmin}
+            </button>
 
             <div className="flex-1 space-y-2 overflow-y-auto p-3">
               {msgs.length === 0 && (

@@ -511,6 +511,7 @@ export const en = {
     placeholder: "Type your question…",
     send: "Send",
     whatsappUs: "Chat on WhatsApp",
+    talkToAdmin: "Talk to admin",
     quick: ["Delivery time?", "Return policy?", "Payment methods?", "Shop timings?"],
     fallback: "Sorry, I don't have an answer for that. Our team can help you on WhatsApp:",
     greeting: "Hello! Welcome to Hammer Trading Company. How can I help you today?",
@@ -564,6 +565,25 @@ export const en = {
     dragHint: "Photo ko drag karo",
     smaller: "Chhota karo",
     bigger: "Bara karo",
+  },
+  chatSettings: {
+    title: "Chat Settings",
+    subtitle: "Bot auto-switch ka control",
+    liveStatus: "Live Status",
+    botAnswering: "Bot jawab de raha hai",
+    adminAnswering: "Admin jawab de raha hai",
+    adminOnline: "Admin online hai",
+    adminOffline: "Admin offline hai",
+    controls: "Bot Controls",
+    botEnabled: "Bot Enabled",
+    botEnabledDesc: "Band karo to bot kabhi jawab nahi dega — sirf admin.",
+    autoMode: "Bot Auto Mode",
+    autoModeDesc: "On: admin online ho to bot khud off, offline ho to on. Off: bot hamesha on (manual).",
+    howItWorks:
+      "Auto mode mein jab aap /admin par hote ho to har 30 second mein system ko pata chalta hai aap online ho — bot khud band ho jata hai aur customer seedha aap se baat karta hai. Admin panel band karne ke 2 minute baad bot wapas on ho jata hai.",
+    saved: "Save ho gaya",
+    saveFailed: "Save nahi hua",
+    notConfigured: "Firebase configured nahi hai",
   },
 };
 

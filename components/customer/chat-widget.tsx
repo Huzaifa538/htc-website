@@ -31,6 +31,7 @@ import {
   Package,
   Send,
   X,
+  Bot,
 } from "lucide-react";
 import { toast } from "sonner";
 import { db, isFirebaseConfigured } from "@/lib/firebase/client";
@@ -324,14 +325,20 @@ export function ChatWidget() {
                     key={m.id}
                     className={cn("flex", mine ? "justify-end" : "justify-start")}
                   >
-                    <div
-                      className={cn(
-                        "max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm shadow-sm",
-                        mine
-                          ? "rounded-br-md bg-[#D21F26] text-white"
-                          : "rounded-bl-md bg-white text-foreground dark:bg-stone-900"
+                    <div className="max-w-[80%]">
+                      {m.sender === "bot" && (
+                        <p className="mb-0.5 flex items-center gap-1 text-[10px] font-bold text-violet-600">
+                          <Bot size={11} /> {t.chatBot.title}
+                        </p>
                       )}
-                    >
+                      <div
+                        className={cn(
+                          "rounded-2xl px-3.5 py-2.5 text-sm shadow-sm",
+                          mine
+                            ? "rounded-br-md bg-[#D21F26] text-white"
+                            : "rounded-bl-md bg-white text-foreground dark:bg-stone-900"
+                        )}
+                      >
                       {card && <RefCard card={card} />}
                       {m.imageUrl && (
                         <a
@@ -359,6 +366,7 @@ export function ChatWidget() {
                           {m.read ? <CheckCheck size={14} /> : <Check size={14} />}
                         </span>
                       )}
+                      </div>
                     </div>
                   </div>
                 );

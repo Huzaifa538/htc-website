@@ -60,6 +60,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/components/providers";
+import { useAdminHeartbeat } from "@/lib/bot-mode";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { db, isFirebaseConfigured } from "@/lib/firebase/client";
 import { COLLECTIONS } from "@/lib/firebase/collections";
@@ -146,6 +147,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/admin/hero", label: "Hero Slides", icon: Images },
       { href: "/admin/about", label: "About", icon: Info },
       { href: "/admin/settings", label: "Site Settings", icon: Settings },
+      { href: "/admin/chat-settings", label: "Chat Settings", icon: MessageSquare },
       { href: "/admin/notifications", label: "Notifications", icon: Bell },
     ],
   },
@@ -170,7 +172,7 @@ const VIEWER_HIDDEN = new Set([
   "/admin/projects",
   "/admin/quotations",
 ]);
-const NON_OWNER_HIDDEN = new Set(["/admin/settings", "/admin/staff"]);
+const NON_OWNER_HIDDEN = new Set(["/admin/settings", "/admin/staff", "/admin/chat-settings"]);
 
 function navGroupsForRole(role: StaffRole | null): NavGroup[] {
   if (role === null || role === "owner") return NAV_GROUPS;
@@ -515,6 +517,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const groups = useMemo(() => navGroupsForRole(role), [role]);
+
+  // Admin online heartbeat — jab tak /admin khula hai, chat bot ko
+  // pata chalta rahega ke admin maujood hai (auto-switch ke liye).
+  useAdminHeartbeat(!!user && isAdmin);
 
   if (loading) {
     return (

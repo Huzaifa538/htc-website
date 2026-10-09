@@ -420,7 +420,7 @@ export interface ChatRefCard {
 export interface ChatMessage {
   id: string;
   chatId: string; // === userId
-  sender: "user" | "admin";
+  sender: "user" | "admin" | "bot";
   text: string;
   imageUrl?: string;
   /** Brand routing for the conversation (set on user messages + merged onto the parent chat doc). */
