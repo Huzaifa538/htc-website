@@ -13,10 +13,10 @@ import { ArrowLeft, MapPin, Phone, User, Check, Circle } from "lucide-react";
 
 import { db, isFirebaseConfigured } from "@/lib/firebase/client";
 import { COLLECTIONS } from "@/lib/firebase/collections";
-import type { Order, OrderStatus, SiteSettings } from "@/lib/types";
+import type { Order, OrderStatus, SiteSettings, StaffMember } from "@/lib/types";
 import { canTransition } from "@/lib/order-flow";
 import { formatPKR } from "@/lib/format";
-import { useDoc, fmtDateTime, shortId } from "@/components/admin/firebase";
+import { useDoc, useCollection, fmtDateTime, shortId } from "@/components/admin/firebase";
 import SetupWarning from "@/components/admin/SetupWarning";
 import { PageHeader, LoadingState, EmptyState, StatusBadge } from "@/components/admin/ui";
 import { InvoicePrintStyles } from "@/components/invoice/InvoicePrintView";
@@ -42,7 +42,25 @@ export default function OrderDetailPage() {
   const id = typeof params.id === "string" ? params.id : undefined;
   const { data: order, loading } = useDoc<Order>(COLLECTIONS.orders, id);
   const { data: settings } = useDoc<SiteSettings>(COLLECTIONS.siteSettings, "main");
+  const { data: staff } = useCollection<StaffMember>(COLLECTIONS.staff);
   const [saving, setSaving] = useState(false);
+
+  // Order kisi staff member ko assign karo (performance tracking)
+  const assignTo = async (email: string) => {
+    if (!db || !order) return;
+    setSaving(true);
+    try {
+      await updateDoc(doc(db, COLLECTIONS.orders, order.id), {
+        assignedTo: email || "",
+        updatedAt: serverTimestamp(),
+      });
+      toast.success(email ? `Order ${email} ko assign ho gaya.` : "Assignment hata di.");
+    } catch {
+      toast.error("Assign nahi hua.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const changeStatus = async (status: OrderStatus) => {
     if (!db || !order) return;
@@ -260,6 +278,29 @@ export default function OrderDetailPage() {
               </div>
               {order.imported && (
                 <p className="text-xs text-muted-foreground">Imported history — read-only, status cannot be changed.</p>
+              )}
+              {/* Staff assignment — performance tracking ke liye */}
+              {!order.imported && staff.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-muted-foreground">Assign to:</span>
+                  <Select
+                    value={order.assignedTo ?? ""}
+                    onValueChange={(v) => void assignTo(v)}
+                    disabled={saving}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Unassigned" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Unassigned</SelectItem>
+                      {staff.map((s) => (
+                        <SelectItem key={s.id} value={s.email}>
+                          {s.name} ({s.email})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               )}
               <p className="text-xs text-muted-foreground">Updated {fmtDateTime(order.updatedAt)}</p>
             </CardContent>

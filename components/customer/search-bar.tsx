@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
+import { Search, Mic, MicOff } from "lucide-react";
 import { formatPKR } from "@/lib/format";
 import { getProductPrice, primaryImage } from "@/components/customer/product-utils";
 import { useProducts } from "@/components/customer/data-hooks";
@@ -20,6 +20,61 @@ export function SearchBar({ compact = false }: { compact?: boolean }) {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
+  const [listening, setListening] = useState(false);
+  const recogRef = useRef<{ stop: () => void } | null>(null);
+
+  // Voice search — Web Speech API (Chrome/Edge). Mic dabao, bolo, product dhoondo.
+  function toggleVoice() {
+    if (listening) {
+      recogRef.current?.stop();
+      return;
+    }
+    const w = window as unknown as Record<string, unknown>;
+    const SR = (w.SpeechRecognition || w.webkitSpeechRecognition) as
+      | (new () => {
+          lang: string;
+          interimResults: boolean;
+          onresult: ((e: { results?: Array<Array<{ transcript?: string }>> }) => void) | null;
+          onend: (() => void) | null;
+          onerror: (() => void) | null;
+          start: () => void;
+          stop: () => void;
+        })
+      | undefined;
+    if (!SR) {
+      // Browser support nahi karta — user type karke dhoonde
+      return;
+    }
+    const recog = new SR();
+    recogRef.current = recog;
+    recog.lang = "ur-PK"; // Urdu + English dono sunta hai
+    recog.interimResults = false;
+    recog.onresult = (e) => {
+      const text = e.results?.[0]?.[0]?.transcript ?? "";
+      if (text.trim()) {
+        setQ(text.trim());
+        setOpen(true);
+      }
+    };
+    recog.onend = () => setListening(false);
+    recog.onerror = () => setListening(false);
+    try {
+      recog.start();
+      setListening(true);
+    } catch {
+      setListening(false);
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      try {
+        recogRef.current?.stop();
+      } catch {
+        /* noop */
+      }
+    };
+  }, []);
 
   const suggestions = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -64,6 +119,18 @@ export function SearchBar({ compact = false }: { compact?: boolean }) {
           }
           aria-label={t.header.search}
         />
+        <button
+          onClick={toggleVoice}
+          aria-label={t.search.voiceSearch}
+          title={t.search.voiceSearch}
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition ${
+            listening
+              ? "animate-pulse bg-[#D21F26] text-white"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          }`}
+        >
+          {listening ? <MicOff size={15} /> : <Mic size={15} />}
+        </button>
         <button
           onClick={submit}
           aria-label={t.header.search}

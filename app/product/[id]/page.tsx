@@ -40,9 +40,9 @@ export async function generateMetadata({
   const product = await getProductSeo(params.id);
   if (!product) {
     return {
-      title: "Product not found",
+      title: "Product | HTC — Hammer Trading",
       description:
-        "This product may have been removed or is unavailable. Browse Hammer Trading Company's door hardware collection.",
+        "Browse Hammer Trading Company's door hardware collection.",
       robots: { index: false, follow: true },
     };
   }

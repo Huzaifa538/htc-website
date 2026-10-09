@@ -21,6 +21,7 @@ import {
   Minus,
   Play,
   Plus,
+  ScanEye,
   ShieldCheck,
   ShoppingCart,
   Truck,
@@ -47,6 +48,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useProduct, useReviews } from "@/components/customer/data-hooks";
 import { WhatsAppOrderButton } from "@/components/customer/whatsapp-order-button";
 import { InstallationBookingDialog } from "@/components/customer/installation-booking";
+import { ArPreview } from "@/components/customer/ar-preview";
 import { useCartStore } from "@/lib/store/cart";
 import { useWishlistStore } from "@/lib/store/wishlist";
 import { useUiStore } from "@/lib/store/ui";
@@ -116,6 +118,7 @@ export default function ProductPage({ id: propId }: { id?: string }) {
   const [reviewText, setReviewText] = useState("");
   const [reviewBusy, setReviewBusy] = useState(false);
   const [installOpen, setInstallOpen] = useState(false);
+  const [arOpen, setArOpen] = useState(false);
   // Pending review photos (local File objects with preview URLs).
   const [reviewFiles, setReviewFiles] = useState<{ file: File; preview: string }[]>([]);
   const [reviewUploading, setReviewUploading] = useState(false);
@@ -593,6 +596,26 @@ export default function ProductPage({ id: propId }: { id?: string }) {
                   productId={product.id}
                   productName={product.name}
                 />
+              </div>
+            )}
+
+            {/* AR preview — camera par product dekho */}
+            {gallery.length > 0 && (
+              <div className="mt-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setArOpen(true)}
+                  className="w-full rounded-full py-6 font-bold"
+                >
+                  <ScanEye size={18} className="mr-2 rtl:ml-2 rtl:mr-0" /> {t.ar.button}
+                </Button>
+                {arOpen && (
+                  <ArPreview
+                    image={gallery[0]}
+                    productName={product.name}
+                    onClose={() => setArOpen(false)}
+                  />
+                )}
               </div>
             )}
 

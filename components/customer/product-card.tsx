@@ -43,7 +43,8 @@ import {
 import { Stars } from "@/components/customer/stars";
 import { QuickView } from "@/components/customer/quick-view";
 import { WhatsAppOrderButton } from "@/components/customer/whatsapp-order-button";
-import { useActiveFlashSale } from "@/components/flash-sale-banner";
+import { useActiveFlashSale, useActiveFestivalSale } from "@/components/flash-sale-banner";
+import { applyFestivalSale } from "@/lib/festival-sale";
 import { applyFlashSale } from "@/lib/flash-sale";
 
 const TILT_MAX = 8; // degrees
@@ -140,8 +141,12 @@ export function ProductCard({ product }: { product: WithId<Product> }) {
   const href = `/product/${product.slug || product.id}`;
   // Flash sale: show discounted price with strikethrough original.
   const flashSale = useActiveFlashSale();
-  const salePrice = flashSale ? applyFlashSale(price.price, flashSale) : price.price;
-  const onSale = flashSale != null && salePrice < price.price;
+  // Festival sale: dono active hon to customer ko ZYADA discount wali milti hai.
+  const festivalSale = useActiveFestivalSale();
+  const flashPrice = flashSale ? applyFlashSale(price.price, flashSale) : price.price;
+  const festivalPrice = festivalSale ? applyFestivalSale(price.price, festivalSale) : price.price;
+  const salePrice = Math.min(flashPrice, festivalPrice);
+  const onSale = salePrice < price.price;
   const hasVariants = product.variantTypes.length > 0;
   const outOfStock = price.stock <= 0;
   // Contact-for-price items: no cart actions, WhatsApp inquiry instead.
@@ -286,6 +291,15 @@ export function ProductCard({ product }: { product: WithId<Product> }) {
                 {price.discountPct > 0 && (
                   <span className="absolute left-2 top-2 rounded-full bg-[#D21F26] px-2.5 py-1 text-xs font-extrabold text-white shadow">
                     -{price.discountPct}%
+                  </span>
+                )}
+                {/* Festival sale badge — Eid/Diwali offer chal rahi hai */}
+                {festivalSale && (
+                  <span
+                    className="absolute left-2 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-extrabold text-white shadow"
+                    style={{ top: price.discountPct > 0 ? "2.4rem" : "0.5rem" }}
+                  >
+                    🎉 {festivalSale.name} −{festivalSale.discountPct}%
                   </span>
                 )}
 

@@ -15,8 +15,9 @@ import Link from "next/link";
 import { useLanguage } from "@/lib/i18n";
 import { useCollection } from "@/components/admin/firebase";
 import { COLLECTIONS } from "@/lib/firebase/collections";
-import type { FlashSale, WithId } from "@/lib/types";
+import type { FlashSale, FestivalSale, WithId } from "@/lib/types";
 import { pickActiveFlashSale, splitCountdown, tsMillis } from "@/lib/flash-sale";
+import { pickActiveFestivalSale } from "@/lib/festival-sale";
 
 function useActiveFlashSale(): WithId<FlashSale> | null {
   const { data } = useCollection<FlashSale>(COLLECTIONS.flashSales);
@@ -31,6 +32,19 @@ function useActiveFlashSale(): WithId<FlashSale> | null {
 }
 
 export { useActiveFlashSale };
+
+/** Festival sale hook — Eid/Diwali offers. Dono active hon to zyada discount wali jeetti hai. */
+export function useActiveFestivalSale(): WithId<FestivalSale> | null {
+  const { data } = useCollection<FestivalSale>(COLLECTIONS.festivalSales);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  return useMemo(() => pickActiveFestivalSale(data ?? [], now), [data, now]);
+}
 
 function TimeChip({ value, label }: { value: string; label: string }) {
   return (

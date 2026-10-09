@@ -35,6 +35,7 @@ import { COLLECTIONS } from "@/lib/firebase/collections";
 import { useAuth } from "@/components/providers";
 import { SiteShell } from "@/components/customer/site-shell";
 import { Reveal } from "@/components/customer/reveal";
+import { ReferralCard } from "@/components/customer/referral-card";
 import { EmptyState } from "@/components/customer/skeletons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -269,6 +270,9 @@ export default function ProfilePage() {
             </Button>
           </Link>
         </div>
+
+        {/* Referral program */}
+        <ReferralCard />
 
         {/* Addresses */}
         <div className="mt-8">

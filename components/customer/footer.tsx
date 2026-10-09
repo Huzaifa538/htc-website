@@ -25,6 +25,7 @@ import {
 import { db, isFirebaseConfigured } from "@/lib/firebase/client";
 import { useSiteSettings } from "@/components/customer/data-hooks";
 import { useLanguage } from "@/lib/i18n";
+import { WhatsAppCatalogButton } from "@/components/customer/whatsapp-catalog-button";
 
 const QUICK_LINKS = [
   { href: "/shop", key: "shop" },
@@ -177,6 +178,7 @@ export function Footer() {
               </li>
             )}
           </ul>
+          <WhatsAppCatalogButton phone={settings?.whatsappNumber} />
           <form onSubmit={subscribe} className="mt-5">
             <p className="mb-2 text-sm font-semibold text-white">
               {t.footer.dealsInbox}

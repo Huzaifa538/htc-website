@@ -15,7 +15,7 @@ import { useUiStore } from "@/lib/store/ui";
 import { Navbar } from "@/components/customer/navbar";
 import { Footer } from "@/components/customer/footer";
 import { CartDrawer } from "@/components/customer/cart-drawer";
-import { ChatWidget } from "@/components/customer/chat-widget";
+import { ChatBot } from "@/components/customer/chat-bot";
 import { WhatsAppButton } from "@/components/customer/whatsapp-button";
 import { useSiteSettings } from "@/components/customer/data-hooks";
 
@@ -77,7 +77,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
       </AnimatePresence>
       <Footer />
       <CartDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
-      <ChatWidget />
+      <ChatBot />
       <WhatsAppButton />
       <SyncOnAuth />
     </div>

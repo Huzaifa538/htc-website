@@ -89,7 +89,7 @@ export function ChatBot() {
       <button
         onClick={() => setOpen((o) => !o)}
         aria-label="HTC helper"
-        className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#D21F26] text-white shadow-xl transition hover:scale-105"
+        className="fixed bottom-24 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#D21F26] text-white shadow-xl transition hover:scale-105"
       >
         {open ? <X size={24} /> : <MessageCircle size={24} />}
       </button>
@@ -101,7 +101,7 @@ export function ChatBot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.96 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-24 right-5 z-50 flex h-[420px] w-[320px] flex-col overflow-hidden rounded-2xl border bg-white shadow-2xl dark:bg-stone-900"
+            className="fixed bottom-40 right-5 z-50 flex h-[420px] w-[320px] flex-col overflow-hidden rounded-2xl border bg-white shadow-2xl dark:bg-stone-900"
           >
             <div className="bg-[#D21F26] px-4 py-3 text-white">
               <p className="font-bold">{t.chatBot.title}</p>

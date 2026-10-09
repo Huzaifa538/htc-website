@@ -20,6 +20,7 @@ import {
   LoadingState,
   ConfirmDialog,
 } from "@/components/admin/ui";
+import { FeedbackSummary } from "@/components/admin/feedback-summary";
 import { Stars } from "@/components/customer/stars";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -100,6 +101,8 @@ export default function ReviewsPage() {
         title="Reviews"
         subtitle="Moderate customer reviews. Only approved reviews appear on the storefront."
       />
+
+      <FeedbackSummary reviews={reviews} />
 
       <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
         <TabsList>

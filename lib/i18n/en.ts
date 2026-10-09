@@ -36,6 +36,7 @@ export const en = {
   search: {
     placeholder: "Search locks, handles, hinges…",
     seeAllResults: (q: string) => `See all results for "${q}"`,
+    voiceSearch: "Voice search — tap and speak",
   },
   hero: {
     eyebrow: "Hammer Trading",
@@ -526,6 +527,43 @@ export const en = {
       "We're Hammer Trading Company — visit our shop or order online, we deliver all over Pakistan.",
     price:
       "Prices are listed on each product page. For bulk orders or special rates, message us on WhatsApp and we'll give you our best price.",
+  },
+  whatsappCatalog: {
+    label: "View catalog on WhatsApp",
+    message:
+      "Assalam-o-Alaikum! Mujhe MTR Store ka product catalog bhejo 📋",
+  },
+  referral: {
+    title: "Refer & Earn",
+    subtitle: (pts: number) =>
+      `Dost ko lao — uske pehle order par tum dono ko ${pts} points (Rs ${pts}) bonus!`,
+    copy: "Copy code",
+    share: "Share on WhatsApp",
+    copyFailed: "Copy nahi hua",
+    shareText: (code: string) =>
+      `MTR Store join karo! Mera referral code use karo: ${code} — pehle order par hum dono ko Rs 200 bonus milega 🎉 https://htc-website-two.vercel.app`,
+    friendCodePlaceholder: "Dost ka code (jaise HTC-X7K2P9)",
+    apply: "Apply",
+    applied: (pts: number) =>
+      `Code lag gaya! Pehle order par tumhe ${pts} bonus points milenge 🎉`,
+    referredDone: "Referral code lag chuka hai — pehle order par bonus milega!",
+    errors: {
+      "invalid-code": "Code sahi nahi hai",
+      "code-not-found": "Ye code kisi ka nahi hai",
+      "own-code": "Apna code khud nahi laga sakte",
+      "already-referred": "Tum pehle hi referred ho",
+      "already-ordered": "Sirf naye customers ke liye hai",
+      failed: "Code nahi laga — dobara try karo",
+    },
+  },
+  ar: {
+    title: "AR Preview",
+    close: "Close",
+    button: "AR mein dekho",
+    cameraDenied: "Camera ki permission nahi mili. Browser settings mein camera allow karo aur dobara try karo.",
+    dragHint: "Photo ko drag karo",
+    smaller: "Chhota karo",
+    bigger: "Bara karo",
   },
 };
 

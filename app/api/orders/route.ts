@@ -30,6 +30,7 @@ import {
   maxUsablePoints,
   pointsForAmount,
 } from "@/lib/loyalty";
+import { REFERRAL_BONUS_POINTS } from "@/lib/referral";
 import { getProductPrice } from "@/components/customer/product-utils";
 import { tooManyRequests } from "@/lib/rate-limit";
 import type {
@@ -224,6 +225,44 @@ export async function POST(req: NextRequest) {
       }
     } catch {
       /* non-fatal */
+    }
+
+    // Referral bonus: pehla order + referredBy set hai to dono ko 200 points.
+    try {
+      const userSnap = await userRef.get();
+      const userData = userSnap.data() as
+        | { referredBy?: string; referralCode?: string }
+        | undefined;
+      if (userData?.referredBy) {
+        const priorOrders = await adminDb
+          .collection(COLLECTIONS.orders)
+          .where("userId", "==", uid)
+          .count()
+          .get();
+        // count mein ye wala order bhi shamil hai — 1 ka matlab pehla order
+        if (priorOrders.data().count <= 1) {
+          const referrerRef = adminDb
+            .collection(COLLECTIONS.users)
+            .doc(userData.referredBy);
+          await referrerRef.set(
+            {
+              loyaltyPoints: FieldValue.increment(REFERRAL_BONUS_POINTS),
+              updatedAt: FieldValue.serverTimestamp(),
+            },
+            { merge: true }
+          );
+          await userRef.set(
+            {
+              loyaltyPoints: FieldValue.increment(REFERRAL_BONUS_POINTS),
+              updatedAt: FieldValue.serverTimestamp(),
+            },
+            { merge: true }
+          );
+          await ref.update({ referralBonusApplied: true });
+        }
+      }
+    } catch {
+      /* referral bonus best-effort hai */
     }
 
     return NextResponse.json({ ok: true, id: ref.id, total });

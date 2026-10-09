@@ -27,6 +27,7 @@ import {
 } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StaffPerformance } from "@/components/admin/staff-performance";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -229,6 +230,9 @@ export default function StaffPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Performance — kaunsa staff member kitne orders handle kar raha hai */}
+      {sorted.length > 0 && <StaffPerformance staff={sorted} />}
 
       {/* add dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

@@ -125,6 +125,8 @@ export interface Order {
   notes?: string;
   /** True when this order was imported from historical data (not placed on the storefront). */
   imported?: boolean;
+  /** Staff member (email) ye order handle kar raha hai — performance tracking ke liye. */
+  assignedTo?: string;
   /** Origin of the order: "store" (default) or "history" (one-time historical import). */
   source?: "history" | "store";
   createdAt: Timestamp;
@@ -159,6 +161,22 @@ export interface FlashSale {
   enabled: boolean;
   /** Optional: only these category ids get the discount (empty = all). */
   categoryIds?: string[];
+  createdAt: Timestamp;
+}
+
+/**
+ * Festival sale — Eid/Diwali/Christmas jaisi khaas mauqaon par discount.
+ * Flash sale jaisa hi kaam karta hai, lekin naam se pata chalta hai ke
+ * ye festival offer hai. Dono ek saath active hon to zyada discount
+ * wali apply hoti hai (customer ke faide mein).
+ */
+export interface FestivalSale {
+  id: string;
+  name: string; // e.g. "Eid ul-Fitr", "Diwali", "Christmas"
+  discountPct: number; // 1–90
+  startsAt: Timestamp;
+  endsAt: Timestamp;
+  enabled: boolean;
   createdAt: Timestamp;
 }
 
@@ -356,6 +374,10 @@ export interface AppUser {
   addresses: OrderAddress[];
   /** Loyalty points balance. Rs 100 spent = 1 point, 1 point = Rs 1 off. */
   loyaltyPoints?: number;
+  /** Is user ka apna referral code (e.g. "HTC-X7K2P9"). */
+  referralCode?: string;
+  /** Jis user ke code se ye join hua (referrer ka uid). Pehle order par dono ko bonus. */
+  referredBy?: string;
   /** Internal admin notes, e.g. "prefers COD", "wholesale buyer". Never shown to the customer. */
   notes?: string;
   createdAt: Timestamp;
@@ -477,6 +499,21 @@ export interface Expense {
   note?: string;
   receiptUrl?: string;
   addedBy?: string; // staff email
+  createdAt: Timestamp;
+}
+
+/**
+ * Supplier — samaan kahan se aata hai. Rates compare karne ke liye
+ * har supplier ke paas category + notes + rating hoti hai.
+ */
+export interface Supplier {
+  id: string;
+  name: string;
+  phone?: string;
+  category: string; // e.g. "Locks", "Handles", "Paint"
+  notes?: string;
+  /** 1–5, sasta + reliable = zyada stars */
+  rating?: number;
   createdAt: Timestamp;
 }
 
