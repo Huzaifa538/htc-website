@@ -173,6 +173,10 @@ service cloud.firestore {
       allow create: if true; // public inquiry form
       allow read, update, delete: if isAdmin();
     }
+    match /installationBookings/{id} {
+      allow create: if true; // public installation booking form (product pages)
+      allow read, update, delete: if isAdmin();
+    }
     // Quotations: public "request quote" form (service pages) creates them;
     // admin-created ones use the same rule. Owner can read their own.
     match /quotations/{id} {
