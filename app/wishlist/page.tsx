@@ -14,10 +14,12 @@ import { SiteShell } from "@/components/customer/site-shell";
 import { ProductCard } from "@/components/customer/product-card";
 import { Reveal } from "@/components/customer/reveal";
 import { EmptyState, ProductGridSkeleton } from "@/components/customer/skeletons";
+import { useLanguage } from "@/lib/i18n";
 import { useWishlistStore } from "@/lib/store/wishlist";
 import { useProducts } from "@/components/customer/data-hooks";
 
 export default function WishlistPage() {
+  const { t } = useLanguage();
   const productIds = useWishlistStore((s) => s.productIds);
   const { products, loading } = useProducts();
   // Fallback: fetch wishlisted products directly by document id, in case an
@@ -63,10 +65,10 @@ export default function WishlistPage() {
       <div className="container py-10">
         <Reveal>
           <h1 className="flex items-center gap-3 font-display text-3xl font-extrabold tracking-tight sm:text-4xl">
-            <Heart className="fill-[#D21F26] text-[#D21F26]" /> My Wishlist
+            <Heart className="fill-[#D21F26] text-[#D21F26]" /> {t.wishlist.title}
           </h1>
           <p className="mt-2 text-muted-foreground">
-            {items.length} saved item{items.length === 1 ? "" : "s"}
+            {t.wishlist.savedItems(items.length)}
           </p>
         </Reveal>
 
@@ -75,9 +77,9 @@ export default function WishlistPage() {
             <ProductGridSkeleton count={8} />
           ) : items.length === 0 ? (
             <EmptyState
-              title="Wishlist is empty"
-              description="Tap the heart on any product to save it here for later."
-              actionLabel="Discover Products"
+              title={t.wishlist.emptyTitle}
+              description={t.wishlist.emptySub}
+              actionLabel={t.wishlist.discover}
               actionHref="/shop"
             />
           ) : (
@@ -95,7 +97,7 @@ export default function WishlistPage() {
               href="/shop"
               className="inline-flex items-center gap-2 rounded-full border px-7 py-3 font-bold transition hover:border-[#D21F26] hover:text-[#D21F26]"
             >
-              Keep exploring
+              {t.wishlist.keepExploring}
             </Link>
           </div>
         )}

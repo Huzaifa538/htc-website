@@ -15,6 +15,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, BadgeCheck, ChevronLeft, ChevronRight, Truck } from "lucide-react";
+import { useLanguage } from "@/lib/i18n";
 import { useHeroSlides } from "@/components/customer/data-hooks";
 import { tsMillis } from "@/components/customer/product-utils";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ const AUTOPLAY_MS = 6000;
 const PARALLAX_RANGE = 46;
 
 function FallbackHero() {
+  const { t } = useLanguage();
   return (
     <div className="relative flex h-[70vh] min-h-[480px] items-center overflow-hidden bg-stone-950">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,#D21F26_0%,transparent_55%),radial-gradient(ellipse_at_bottom_left,#7C4A21_0%,transparent_50%)] opacity-60" />
@@ -37,30 +39,29 @@ function FallbackHero() {
         >
           <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.28em] text-white backdrop-blur-md">
             <span className="h-1.5 w-1.5 rounded-full bg-[#D21F26] shadow-[0_0_8px_rgba(210,31,38,0.9)]" />
-            Hammer Trading
+            {t.hero.eyebrow}
           </p>
-          <h1 className="font-display text-5xl font-black leading-[1.05] tracking-tight sm:text-7xl">
+          <h1 className="font-display text-4xl font-black leading-[1.08] tracking-tight sm:text-5xl lg:text-7xl">
             <span className="bg-gradient-to-br from-white via-white to-white/70 bg-clip-text text-transparent">
-              Quality Door Hardware &amp; Fittings
+              {t.hero.title}
             </span>
           </h1>
-          <p className="mt-5 max-w-xl text-lg font-medium leading-relaxed text-white/80">
-            Locks, handles, hinges &amp; more — door hardware, epoxy resin and
-            hand tools delivered across Pakistan.
+          <p className="mt-5 max-w-xl text-base font-medium leading-relaxed text-white/80 sm:text-lg">
+            {t.hero.subtitle}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               href="/shop"
-              className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#D21F26] to-[#a8161c] px-8 py-3.5 font-bold text-white shadow-[0_12px_32px_-8px_rgba(210,31,38,0.7)] transition-all hover:shadow-[0_16px_40px_-8px_rgba(210,31,38,0.85)]"
+              className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#D21F26] to-[#a8161c] px-6 py-3 font-bold text-white shadow-[0_12px_32px_-8px_rgba(210,31,38,0.7)] transition-all hover:shadow-[0_16px_40px_-8px_rgba(210,31,38,0.85)] sm:px-8 sm:py-3.5"
             >
-              Shop Now
-              <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+              {t.hero.shopNow}
+              <ArrowRight size={18} className="transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
             </Link>
             <Link
               href="/services"
-              className="inline-flex items-center gap-2 rounded-full border border-white/30 px-8 py-3.5 font-bold text-white transition hover:bg-white/10"
+              className="inline-flex items-center gap-2 rounded-full border border-white/30 px-6 py-3 font-bold text-white transition hover:bg-white/10 sm:px-8 sm:py-3.5"
             >
-              Our Services
+              {t.hero.ourServices}
             </Link>
           </div>
         </motion.div>
@@ -163,6 +164,7 @@ function useHeroParallax(containerRef: React.RefObject<HTMLDivElement | null>) {
 
 export function HeroSlider() {
   const { items, loading, configured } = useHeroSlides();
+  const { t } = useLanguage();
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const touchX = useRef<number | null>(null);
@@ -241,10 +243,10 @@ export function HeroSlider() {
             className="absolute inset-0 will-change-transform"
           >
             <div className="absolute right-[8%] top-[18%] hidden items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-white backdrop-blur-md sm:flex">
-              <Truck size={14} className="text-[#D21F26]" /> Free Delivery
+              <Truck size={14} className="text-[#D21F26]" /> {t.homeExtra.freeDelivery}
             </div>
             <div className="absolute bottom-[22%] right-[14%] hidden items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-white backdrop-blur-md lg:flex">
-              <BadgeCheck size={14} className="text-emerald-400" /> Premium Quality
+              <BadgeCheck size={14} className="text-emerald-400" /> {t.homeExtra.premiumQuality}
             </div>
           </div>
         </motion.div>
@@ -275,20 +277,20 @@ export function HeroSlider() {
                 <span className="h-1.5 w-1.5 rounded-full bg-[#D21F26] shadow-[0_0_8px_rgba(210,31,38,0.9)]" />
                 Hammer Trading
               </motion.span>
-              <h1 className="font-display text-5xl font-black leading-[1.05] tracking-tight sm:text-7xl [text-shadow:0_4px_32px_rgba(0,0,0,0.55)]">
+              <h1 className="font-display text-4xl font-black leading-[1.08] tracking-tight sm:text-5xl lg:text-7xl [text-shadow:0_4px_32px_rgba(0,0,0,0.55)]">
                 <span className="bg-gradient-to-br from-white via-white to-white/70 bg-clip-text text-transparent">
                   {slide.title}
                 </span>
               </h1>
               {slide.subtitle && (
-                <p className="mt-5 max-w-xl text-lg font-medium leading-relaxed text-white/80 [text-shadow:0_2px_16px_rgba(0,0,0,0.5)]">
+                <p className="mt-5 max-w-xl text-base font-medium leading-relaxed text-white/80 [text-shadow:0_2px_16px_rgba(0,0,0,0.5)] sm:text-lg">
                   {slide.subtitle}
                 </p>
               )}
               {slide.ctaText && (
                 <Link
                   href={slide.ctaLink || "/shop"}
-                  className="group mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#D21F26] to-[#a8161c] px-8 py-3.5 font-bold text-white shadow-[0_12px_32px_-8px_rgba(210,31,38,0.7)] transition-all hover:shadow-[0_16px_40px_-8px_rgba(210,31,38,0.85)]"
+                  className="group mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#D21F26] to-[#a8161c] px-6 py-3 font-bold text-white shadow-[0_12px_32px_-8px_rgba(210,31,38,0.7)] transition-all hover:shadow-[0_16px_40px_-8px_rgba(210,31,38,0.85)] sm:px-8 sm:py-3.5"
                 >
                   {slide.ctaText}
                   <ArrowRight
@@ -307,14 +309,14 @@ export function HeroSlider() {
         <>
           <button
             onClick={() => go(-1)}
-            aria-label="Previous slide"
+            aria-label={t.hero.prevSlide}
             className="absolute left-4 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur transition hover:bg-[#D21F26]"
           >
             <ChevronLeft size={22} />
           </button>
           <button
             onClick={() => go(1)}
-            aria-label="Next slide"
+            aria-label={t.hero.nextSlide}
             className="absolute right-4 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur transition hover:bg-[#D21F26]"
           >
             <ChevronRight size={22} />
@@ -329,7 +331,7 @@ export function HeroSlider() {
             <button
               key={s.id}
               onClick={() => setIndex(i)}
-              aria-label={`Go to slide ${i + 1}`}
+              aria-label={t.hero.goToSlide(i + 1)}
               className={cn(
                 "h-2.5 rounded-full transition-all",
                 i === index ? "w-8 bg-[#D21F26]" : "w-2.5 bg-white/50 hover:bg-white"

@@ -13,6 +13,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "@/components/providers";
+import { useLanguage } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle } from "lucide-react";
@@ -20,6 +21,7 @@ import { AlertTriangle } from "lucide-react";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useLanguage();
   const { user, isAdmin, adminSession, loading, roleLoading, configured, signInWithGoogle } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [signingIn, setSigningIn] = useState(false);
@@ -44,15 +46,14 @@ function LoginForm() {
     if (adminSession === "pending" || adminSession === "unknown") return;
     // adminSession === "failed"
     if (justSignedIn.current) {
-      setError(
-        "Signed in, but admin access could not be verified on the server. Please try signing in again."
-      );
+      setError(t.auth.adminVerifyFailed);
     } else {
       // Landed here without a fresh sign-in and without a valid admin
       // session (e.g. bounced from middleware) — go to the customer site
       // instead of looping back to /admin.
       router.replace("/");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isAdmin, adminSession, loading, roleLoading, next, router]);
 
   async function handleGoogle() {
@@ -63,7 +64,7 @@ function LoginForm() {
       await signInWithGoogle();
       // Redirect happens via the effect above once auth state settles.
     } catch {
-      setError("Google sign-in failed. Please try again.");
+      setError(t.auth.googleFailed);
       justSignedIn.current = false;
     } finally {
       setSigningIn(false);
@@ -76,19 +77,18 @@ function LoginForm() {
         <CardHeader className="items-center text-center">
           <Image src="/logo.png" alt="HTC — Hammer Trading" width={64} height={64} />
           <p className="mt-1 text-xs font-medium text-muted-foreground">Hammer Trading Company</p>
-          <CardTitle className="mt-2 text-2xl">Welcome to HTC</CardTitle>
-          <CardDescription>Hammer Trading — sign in with your Google account</CardDescription>
+          <CardTitle className="mt-2 text-2xl">{t.auth.welcome}</CardTitle>
+          <CardDescription>{t.auth.signInSub}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {!configured && (
             <p className="flex items-start gap-2 rounded-md bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-200">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-              Firebase is not configured on this deployment. Add the
-              NEXT_PUBLIC_FIREBASE_* keys to enable sign-in.
+              {t.auth.firebaseMissing}
             </p>
           )}
           <Button className="w-full" size="lg" onClick={handleGoogle} disabled={loading || signingIn || !configured}>
-            {loading || signingIn ? "Please wait…" : "Continue with Google"}
+            {loading || signingIn ? t.auth.pleaseWait : t.auth.continueWithGoogle}
           </Button>
           {error && (
             <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
@@ -96,7 +96,7 @@ function LoginForm() {
             </p>
           )}
           <p className="text-center text-xs text-muted-foreground">
-            Admins and staff sign in with their authorized Google account to access the dashboard.
+            {t.auth.adminNote}
           </p>
         </CardContent>
       </Card>

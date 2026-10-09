@@ -23,6 +23,7 @@ import {
   primaryImage,
 } from "@/components/customer/product-utils";
 import { Stars } from "@/components/customer/stars";
+import { useLanguage } from "@/lib/i18n";
 
 export function QuickView({
   product,
@@ -32,6 +33,7 @@ export function QuickView({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const { t } = useLanguage();
   const addLine = useCartStore((s) => s.addLine);
   const toggleWishlist = useWishlistStore((s) => s.toggle);
   const wished = useWishlistStore((s) =>
@@ -48,7 +50,7 @@ export function QuickView({
   const img = product ? primaryImage(product) : "";
   const waHref = product
     ? `https://wa.me/923212476150?text=${encodeURIComponent(
-        `Assalam-o-Alaikum! I want to inquire about ${product.name}`
+        t.productCard.inquireAbout(product.name)
       )}`
     : "#";
 
@@ -69,7 +71,7 @@ export function QuickView({
       unitPrice: combination?.price ?? price.price,
       stock: combination?.stock ?? price.stock,
     });
-    toast.success(`${product.name} added to cart`);
+    toast.success(t.productCard.addedToCart(product.name));
     onClose();
     openDrawer(true);
   }
@@ -77,7 +79,7 @@ export function QuickView({
   function handleWishlist() {
     if (!product) return;
     toggleWishlist(product.id);
-    toast(wished ? "Removed from wishlist" : "Saved to wishlist");
+    toast(wished ? t.productCard.removedFromWishlist : t.productCard.savedToWishlist);
   }
 
   return (
@@ -101,7 +103,7 @@ export function QuickView({
             {/* Close */}
             <button
               onClick={onClose}
-              aria-label="Close quick view"
+              aria-label={t.productCard.closeQuickView}
               className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur transition hover:bg-black/60"
             >
               <X size={18} />
@@ -140,7 +142,7 @@ export function QuickView({
               <div className="flex items-center gap-2">
                 <Stars rating={product.rating} />
                 <span className="text-sm text-muted-foreground">
-                  {product.rating.toFixed(1)} ({product.reviewCount} reviews)
+                  {t.productExtra.ratingReviews(product.rating.toFixed(1), product.reviewCount)}
                 </span>
               </div>
 
@@ -172,8 +174,8 @@ export function QuickView({
                 )}
               >
                 {outOfStock
-                  ? "Out of stock"
-                  : `In stock (${price.stock} available)`}
+                  ? t.productCard.outOfStock
+                  : t.productExtra.inStockAvailable(price.stock)}
               </p>
 
               <div className="mt-6 flex flex-col gap-2.5">
@@ -184,7 +186,7 @@ export function QuickView({
                     rel="noopener noreferrer"
                     className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#1FA855] py-3 font-bold text-white transition hover:bg-[#178a44]"
                   >
-                    <MessageCircle size={17} /> WhatsApp to Inquire
+                    <MessageCircle size={17} /> {t.productCard.whatsAppInquire}
                   </a>
                 ) : (
                   <button
@@ -194,10 +196,10 @@ export function QuickView({
                   >
                     <ShoppingCart size={17} />
                     {hasVariants
-                      ? "Select Options"
+                      ? t.productCard.selectOptions
                       : outOfStock
-                        ? "Out of Stock"
-                        : "Add to Cart"}
+                        ? t.productCard.outOfStock
+                        : t.productCard.addToCart}
                   </button>
                 )}
                 <div className="flex gap-2.5">
@@ -214,21 +216,21 @@ export function QuickView({
                       size={17}
                       className={wished ? "fill-[#D21F26]" : ""}
                     />
-                    {wished ? "Wishlisted" : "Wishlist"}
+                    {wished ? t.productCard.wishlisted : t.productCard.wishlist}
                   </button>
                   <Link
                     href={href}
                     onClick={onClose}
                     className="inline-flex flex-1 items-center justify-center rounded-full bg-black/[0.04] py-3 font-semibold transition hover:bg-black/[0.08] dark:bg-white/[0.07] dark:hover:bg-white/[0.12]"
                   >
-                    View Details
+                    {t.productCard.viewDetails}
                   </Link>
                 </div>
               </div>
 
               {product.sku && (
                 <p className="mt-4 text-xs text-muted-foreground">
-                  SKU: {product.sku}
+                  {t.productCard.sku}: {product.sku}
                 </p>
               )}
             </div>

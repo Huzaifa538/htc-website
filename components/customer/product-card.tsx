@@ -30,6 +30,7 @@ import type { Product, WithId } from "@/lib/types";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers";
+import { useLanguage } from "@/lib/i18n";
 import { useCartStore } from "@/lib/store/cart";
 import { useWishlistStore } from "@/lib/store/wishlist";
 import { useChatUiStore } from "@/lib/store/chat-ui";
@@ -76,6 +77,7 @@ function HeartBurst({ show }: { show: boolean }) {
 export function ProductCard({ product }: { product: WithId<Product> }) {
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const addLine = useCartStore((s) => s.addLine);
   const toggleWishlist = useWishlistStore((s) => s.toggle);
   const wished = useWishlistStore((s) => s.productIds.includes(product.id));
@@ -143,7 +145,7 @@ export function ProductCard({ product }: { product: WithId<Product> }) {
   // Contact-for-price items: no cart actions, WhatsApp inquiry instead.
   const zeroPrice = price.price <= 0;
   const waHref = `https://wa.me/923212476150?text=${encodeURIComponent(
-    `Assalam-o-Alaikum! I want to inquire about ${product.name}`
+    t.productCard.inquireAbout(product.name)
   )}`;
   // Missing product photo: render a placeholder block instead of crashing.
   const img = product.images?.[0];
@@ -165,7 +167,7 @@ export function ProductCard({ product }: { product: WithId<Product> }) {
       unitPrice: combination?.price ?? price.price,
       stock: combination?.stock ?? price.stock,
     });
-    toast.success(`${product.name} added to cart`);
+    toast.success(t.productCard.addedToCart(product.name));
     openDrawer(true);
   }
 
@@ -180,7 +182,7 @@ export function ProductCard({ product }: { product: WithId<Product> }) {
     e.preventDefault();
     e.stopPropagation();
     if (!user) {
-      toast.error("Please sign in to chat about this product");
+      toast.error(t.productCard.signInToChat);
       router.push(`/login?next=${encodeURIComponent(href)}`);
       return;
     }
@@ -192,7 +194,7 @@ export function ProductCard({ product }: { product: WithId<Product> }) {
       detail: formatPrice(price.price),
       href,
     });
-    toast.success("Chat opened — ask us anything about this product");
+    toast.success(t.productCard.chatOpened);
   }
 
   const quickAdd = zeroPrice ? (
@@ -201,25 +203,25 @@ export function ProductCard({ product }: { product: WithId<Product> }) {
       target="_blank"
       rel="noopener noreferrer"
       onClick={(e) => e.stopPropagation()}
-      className="pointer-events-auto inline-flex items-center justify-center gap-2 rounded-full bg-[#1FA855] px-5 py-2.5 text-sm font-bold text-white shadow-xl transition hover:bg-[#178a44]"
+      className="pointer-events-auto inline-flex items-center justify-center gap-1.5 rounded-full bg-[#1FA855] px-4 py-2 text-[13px] font-bold text-white shadow-xl transition hover:bg-[#178a44] sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm"
     >
-      <MessageCircle size={15} /> WhatsApp
+      <MessageCircle size={15} /> {t.productCard.whatsApp}
     </a>
   ) : hasVariants ? (
     <Link
       href={href}
       onClick={(e) => e.stopPropagation()}
-      className="pointer-events-auto inline-flex items-center justify-center gap-2 rounded-full bg-[#7C4A21] px-5 py-2.5 text-sm font-bold text-white shadow-xl transition hover:bg-[#5f3a19]"
+      className="pointer-events-auto inline-flex items-center justify-center gap-1.5 rounded-full bg-[#7C4A21] px-4 py-2 text-[13px] font-bold text-white shadow-xl transition hover:bg-[#5f3a19] sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm"
     >
-      <ShoppingCart size={15} /> Select Options
+      <ShoppingCart size={15} /> {t.productCard.selectOptions}
     </Link>
   ) : (
     <button
       onClick={handleAdd}
       disabled={outOfStock}
-      className="pointer-events-auto inline-flex items-center justify-center gap-2 rounded-full bg-[#7C4A21] px-5 py-2.5 text-sm font-bold text-white shadow-xl transition hover:bg-[#5f3a19] disabled:cursor-not-allowed disabled:opacity-60"
+      className="pointer-events-auto inline-flex items-center justify-center gap-1.5 rounded-full bg-[#7C4A21] px-4 py-2 text-[13px] font-bold text-white shadow-xl transition hover:bg-[#5f3a19] disabled:cursor-not-allowed disabled:opacity-60 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm"
     >
-      <ShoppingCart size={15} /> {outOfStock ? "Out of Stock" : "Add to Cart"}
+      <ShoppingCart size={15} /> {outOfStock ? t.productCard.outOfStock : t.productCard.addToCart}
     </button>
   );
 
@@ -288,8 +290,8 @@ export function ProductCard({ product }: { product: WithId<Product> }) {
                 {/* Info / flip button */}
                 <button
                   onClick={toggleFlip}
-                  aria-label={flipped ? "Hide details" : "View details"}
-                  title="Details"
+                  aria-label={flipped ? t.productCard.hideDetails : t.productCard.viewDetails}
+                  title={t.productCard.details}
                   className="absolute left-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-stone-700 shadow transition hover:bg-white dark:bg-black/60 dark:text-stone-200"
                   style={{ top: price.discountPct > 0 ? "3rem" : "0.5rem" }}
                 >
@@ -308,9 +310,9 @@ export function ProductCard({ product }: { product: WithId<Product> }) {
                       setHeartBurst(true);
                       setTimeout(() => setHeartBurst(false), 550);
                     }
-                    toast(wished ? "Removed from wishlist" : "Saved to wishlist");
+                    toast(wished ? t.productCard.removedFromWishlist : t.productCard.savedToWishlist);
                   }}
-                  aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
+                  aria-label={wished ? t.productCard.removeFromWishlist : t.productCard.addToWishlist}
                   className={cn(
                     "absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full shadow transition",
                     wished
@@ -329,8 +331,8 @@ export function ProductCard({ product }: { product: WithId<Product> }) {
                     e.stopPropagation();
                     setQuickViewOpen(true);
                   }}
-                  aria-label={`Quick view ${product.name}`}
-                  title="Quick view"
+                  aria-label={t.productCard.quickView(product.name)}
+                  title={t.productCard.quickView(product.name)}
                   className="absolute right-2 top-[3.5rem] flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-stone-700 shadow transition hover:bg-white dark:bg-black/60 dark:text-stone-200"
                 >
                   <Eye size={17} />
@@ -339,8 +341,8 @@ export function ProductCard({ product }: { product: WithId<Product> }) {
                 {/* Chat about this product — opens the MTR chat with the product attached */}
                 <button
                   onClick={handleChatAbout}
-                  aria-label={`Chat about ${product.name}`}
-                  title="Chat about this product"
+                  aria-label={t.productCard.chatAbout(product.name)}
+                  title={t.productCard.chatAbout(product.name)}
                   className="absolute right-2 top-[6rem] flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-stone-700 shadow transition hover:bg-white dark:bg-black/60 dark:text-stone-200"
                 >
                   <MessageCircle size={17} />
@@ -348,7 +350,7 @@ export function ProductCard({ product }: { product: WithId<Product> }) {
 
                 {outOfStock && (
                   <span className="absolute bottom-2 left-2 rounded-full bg-black/70 px-2.5 py-1 text-xs font-bold text-white">
-                    Out of stock
+                    {t.productCard.outOfStockBadge}
                   </span>
                 )}
               </div>
@@ -389,14 +391,14 @@ export function ProductCard({ product }: { product: WithId<Product> }) {
                     rel="noopener noreferrer"
                     className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#1FA855] py-2.5 text-sm font-bold text-white transition hover:bg-[#178a44]"
                   >
-                    <MessageCircle size={16} /> WhatsApp to Inquire
+                    <MessageCircle size={16} /> {t.productCard.whatsAppInquire}
                   </a>
                 ) : hasVariants ? (
                   <Link
                     href={href}
                     className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#7C4A21] py-2.5 text-sm font-bold text-white transition hover:bg-[#5f3a19]"
                   >
-                    <ShoppingCart size={16} /> Select Options
+                    <ShoppingCart size={16} /> {t.productCard.selectOptions}
                   </Link>
                 ) : (
                   <button
@@ -404,7 +406,7 @@ export function ProductCard({ product }: { product: WithId<Product> }) {
                     disabled={outOfStock}
                     className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#7C4A21] py-2.5 text-sm font-bold text-white transition hover:bg-[#5f3a19] disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <ShoppingCart size={16} /> Add to Cart
+                    <ShoppingCart size={16} /> {t.productCard.addToCart}
                   </button>
                 )}
                 {/* WhatsApp direct order */}
@@ -428,7 +430,7 @@ export function ProductCard({ product }: { product: WithId<Product> }) {
             <div className="absolute inset-0 flex flex-col rounded-3xl bg-[#F5E9D3] p-5 shadow-xl [backface-visibility:hidden] [transform:rotateY(180deg)] dark:bg-stone-900 dark:ring-1 dark:ring-white/10">
               <button
                 onClick={toggleFlip}
-                aria-label="Back to product"
+                aria-label={t.productCard.backToProduct}
                 className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-stone-700 shadow transition hover:bg-white dark:bg-black/50 dark:text-stone-200"
               >
                 <X size={16} />
@@ -453,20 +455,20 @@ export function ProductCard({ product }: { product: WithId<Product> }) {
               <dl className="mt-3 space-y-1.5 text-[13px]">
                 {product.sku && (
                   <div className="flex justify-between gap-2">
-                    <dt className="text-muted-foreground">SKU</dt>
+                    <dt className="text-muted-foreground">{t.productCard.sku}</dt>
                     <dd className="font-semibold">{product.sku}</dd>
                   </div>
                 )}
                 <div className="flex justify-between gap-2">
-                  <dt className="text-muted-foreground">Availability</dt>
+                  <dt className="text-muted-foreground">{t.productCard.availability}</dt>
                   <dd className={cn("font-semibold", outOfStock ? "text-red-600" : "text-emerald-700 dark:text-emerald-400")}>
-                    {outOfStock ? "Out of stock" : `In stock (${price.stock})`}
+                    {outOfStock ? t.productCard.outOfStock : t.productCard.inStock(price.stock)}
                   </dd>
                 </div>
                 {product.soldCount != null && product.soldCount > 0 && (
                   <div className="flex justify-between gap-2">
-                    <dt className="text-muted-foreground">Sold</dt>
-                    <dd className="font-semibold">{product.soldCount}+</dd>
+                    <dt className="text-muted-foreground">{t.productCard.soldLabel}</dt>
+                    <dd className="font-semibold">{t.productCard.sold(product.soldCount)}</dd>
                   </div>
                 )}
               </dl>
@@ -492,14 +494,14 @@ export function ProductCard({ product }: { product: WithId<Product> }) {
                       rel="noopener noreferrer"
                       className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#1FA855] py-2.5 text-sm font-bold text-white transition hover:bg-[#178a44]"
                     >
-                      <MessageCircle size={15} /> WhatsApp to Inquire
+                      <MessageCircle size={15} /> {t.productCard.whatsAppInquire}
                     </a>
                   ) : hasVariants ? (
                     <Link
                       href={href}
                       className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#7C4A21] py-2.5 text-sm font-bold text-white transition hover:bg-[#5f3a19]"
                     >
-                      <ShoppingCart size={15} /> Select Options
+                      <ShoppingCart size={15} /> {t.productCard.selectOptions}
                     </Link>
                   ) : (
                     <button
@@ -507,12 +509,12 @@ export function ProductCard({ product }: { product: WithId<Product> }) {
                       disabled={outOfStock}
                       className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#7C4A21] py-2.5 text-sm font-bold text-white transition hover:bg-[#5f3a19] disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      <ShoppingCart size={15} /> Add to Cart
+                      <ShoppingCart size={15} /> {t.productCard.addToCart}
                     </button>
                   )}
                   <button
                     onClick={toggleFlip}
-                    aria-label="Back to product"
+                    aria-label={t.productCard.backToProduct}
                     className="inline-flex items-center justify-center rounded-full border border-stone-300 px-3.5 text-stone-600 transition hover:border-[#D21F26] hover:text-[#D21F26] dark:border-stone-700 dark:text-stone-300"
                   >
                     <RotateCcw size={15} />

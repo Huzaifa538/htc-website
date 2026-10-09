@@ -37,7 +37,6 @@ import { db, isFirebaseConfigured } from "@/lib/firebase/client";
 import {
   uploadImage,
   isUploadsConfigured,
-  UPLOADS_NOT_CONFIGURED_MESSAGE,
 } from "@/lib/uploads";
 import { COLLECTIONS } from "@/lib/firebase/collections";
 import { useAuth } from "@/components/providers";
@@ -51,6 +50,7 @@ import { brandForRefCard, normalizeRefCard } from "@/lib/chat-ref";
 import { brandForRoute } from "@/lib/brand";
 import { ChatRefPicker } from "./chat-ref-picker";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n";
 import type { ChatBrand, ChatRefCard } from "@/lib/types";
 
 /** Renders a message's ref card (product / service / project). */
@@ -81,6 +81,7 @@ function RefCard({ card }: { card: ChatRefCard }) {
 
 export function ChatWidget() {
   const { user, loading } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
   const { open, refCard, openChat, closeChat, clearRefCard, setUnread } =
@@ -136,7 +137,7 @@ export function ChatWidget() {
 
   function requireLogin(): boolean {
     if (!user) {
-      toast.error("Please sign in to chat with us");
+      toast.error(t.chat.signInToChat);
       router.push(`/login?next=${encodeURIComponent(pathname)}`);
       return false;
     }
@@ -207,7 +208,7 @@ export function ChatWidget() {
       setPickerOpen(false);
       clearRefCard();
     } catch {
-      toast.error("Message failed to send — please try again.");
+      toast.error(t.chat.messageFailed);
     } finally {
       setSending(false);
     }
@@ -219,11 +220,11 @@ export function ChatWidget() {
     if (!file || !uid) return;
     if (!requireLogin()) return;
     if (!isUploadsConfigured()) {
-      toast.error(UPLOADS_NOT_CONFIGURED_MESSAGE, { duration: 6000 });
+      toast.error(t.chat.uploadsUnavailable, { duration: 6000 });
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("Image must be under 10 MB");
+      toast.error(t.chat.imageTooBig);
       return;
     }
     setUploading(true);
@@ -232,7 +233,7 @@ export function ChatWidget() {
       const url = await uploadImage(file, { idToken });
       await sendMessage(url);
     } catch {
-      toast.error("Image upload failed — please try again.");
+      toast.error(t.chat.uploadFailed);
     } finally {
       setUploading(false);
     }
@@ -251,7 +252,7 @@ export function ChatWidget() {
           if (open) closeChat();
           else openChat();
         }}
-        aria-label="Chat with us"
+        aria-label={t.chat.chatWithUs}
         className="fixed bottom-24 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#D21F26] text-white shadow-2xl transition hover:bg-[#a8161c]"
       >
         {open ? <X size={22} /> : <MessageCircle size={22} />}
@@ -287,17 +288,17 @@ export function ChatWidget() {
               )}
               <div className="flex-1">
                 <p className="font-display text-sm font-bold">
-                  {isMtr ? "MTR Store" : "HTC Support"}
+                  {isMtr ? t.chat.mtrStore : t.chat.htcSupport}
                 </p>
                 <p className="text-xs text-white/80">
                   {meta?.typing === "admin"
-                    ? "typing…"
-                    : "Typically replies within an hour"}
+                    ? t.chat.typing
+                    : t.chat.repliesWithin}
                 </p>
               </div>
               <button
                 onClick={closeChat}
-                aria-label="Close chat"
+                aria-label={t.chat.closeChat}
                 className="rounded-full p-1.5 hover:bg-white/20"
               >
                 <X size={18} />
@@ -311,7 +312,7 @@ export function ChatWidget() {
                   <MessageCircle size={36} className="text-muted-foreground/40" />
                   <p className="mt-3 text-sm font-semibold">Assalam-o-Alaikum!</p>
                   <p className="mt-1 max-w-[220px] text-xs text-muted-foreground">
-                    Ask us about products, orders, or interior design services.
+                    {t.chat.startConversation}
                   </p>
                 </div>
               )}
@@ -342,7 +343,7 @@ export function ChatWidget() {
                           <span className="relative block h-36 w-48 overflow-hidden rounded-xl">
                             <Image
                               src={m.imageUrl}
-                              alt="Shared image"
+                              alt={t.chat.sharedImage}
                               fill
                               className="object-cover"
                               sizes="192px"
@@ -465,13 +466,13 @@ export function ChatWidget() {
                 value={text}
                 onChange={(e) => onType(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                placeholder="Type a message…"
+                placeholder={t.chat.typeMessage}
                 className="w-full rounded-full bg-muted px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#D21F26]/40"
               />
               <button
                 onClick={() => sendMessage()}
                 disabled={sending || !text.trim()}
-                aria-label="Send message"
+                aria-label={t.chat.sendMessage}
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#D21F26] text-white transition hover:bg-[#a8161c] disabled:opacity-40"
               >
                 {sending ? (

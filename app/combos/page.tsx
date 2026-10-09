@@ -12,6 +12,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Check, Gift, Package, ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/lib/i18n";
 import { SiteShell } from "@/components/customer/site-shell";
 import { Reveal, SectionHeading } from "@/components/customer/reveal";
 import { EmptyState, ProductGridSkeleton } from "@/components/customer/skeletons";
@@ -26,6 +27,7 @@ import { useUiStore } from "@/lib/store/ui";
 import { cn } from "@/lib/utils";
 
 function ComboCard({ combo, products }: { combo: WithId<Combo>; products: WithId<Product>[] }) {
+  const { t } = useLanguage();
   const addLine = useCartStore((s) => s.addLine);
   const openDrawer = useUiStore((s) => s.setCartDrawerOpen);
 
@@ -53,12 +55,12 @@ function ComboCard({ combo, products }: { combo: WithId<Combo>; products: WithId
       added++;
     }
     if (added === 0) {
-      toast.error("Combo items are out of stock right now");
+      toast.error(t.combos.itemsOutOfStock);
       return;
     }
     // Note: bundle discount is applied as a note — the cart keeps item
     // prices; the owner honors the bundle price on WhatsApp/checkout.
-    toast.success(`${combo.title}: ${added} items added to cart`);
+    toast.success(t.combos.addedToCart(combo.title, added));
     openDrawer(true);
   }
 
@@ -78,7 +80,7 @@ function ComboCard({ combo, products }: { combo: WithId<Combo>; products: WithId
             <h3 className="font-display text-xl font-extrabold text-white">{combo.title}</h3>
             {savingsPct > 0 && (
               <span className="mt-0.5 inline-block rounded-full bg-[#D21F26] px-2.5 py-0.5 text-xs font-extrabold text-white">
-                Save {savingsPct}%
+                {t.combos.save(savingsPct)}
               </span>
             )}
           </div>
@@ -111,7 +113,7 @@ function ComboCard({ combo, products }: { combo: WithId<Combo>; products: WithId
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold">{p.name}</span>
                   <span className={cn("text-xs", out ? "text-red-600 font-bold" : "text-muted-foreground")}>
-                    {out ? "Out of stock" : formatPrice(price.price)}
+                    {out ? t.combos.outOfStock : formatPrice(price.price)}
                   </span>
                 </span>
                 <Check size={16} className="shrink-0 text-emerald-600" />
@@ -126,20 +128,20 @@ function ComboCard({ combo, products }: { combo: WithId<Combo>; products: WithId
         <div className="flex items-end justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Bundle price
+              {t.combos.bundlePrice}
             </p>
             <p className="font-display text-3xl font-extrabold text-[#D21F26]">
               {formatPrice(combo.bundlePrice)}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-xs text-muted-foreground">Regular total</p>
+            <p className="text-xs text-muted-foreground">{t.combos.regularTotal}</p>
             <s className="text-lg font-semibold text-muted-foreground">
               {formatPrice(regularTotal)}
             </s>
             {savings > 0 && (
               <p className="text-sm font-extrabold text-emerald-700 dark:text-emerald-400">
-                You save {formatPrice(savings)}
+                {t.combos.youSave(formatPrice(savings))}
               </p>
             )}
           </div>
@@ -148,10 +150,10 @@ function ComboCard({ combo, products }: { combo: WithId<Combo>; products: WithId
           onClick={addAll}
           className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#7C4A21] py-3.5 text-base font-bold text-white shadow-lg transition hover:bg-[#5f3a19] active:scale-[0.98]"
         >
-          <ShoppingCart size={18} /> Add All to Cart
+          <ShoppingCart size={18} /> {t.combos.addAllToCart}
         </button>
         <p className="mt-2 text-center text-xs text-muted-foreground">
-          Bundle discount confirmed with the owner on checkout.
+          {t.combos.bundleNote}
         </p>
       </div>
     </motion.article>
@@ -159,6 +161,7 @@ function ComboCard({ combo, products }: { combo: WithId<Combo>; products: WithId
 }
 
 export default function CombosPage() {
+  const { t } = useLanguage();
   const { data: combos, loading: combosLoading } = useCollection<Combo>(COLLECTIONS.combos);
   const { products, loading: productsLoading } = useProducts();
 
@@ -172,9 +175,9 @@ export default function CombosPage() {
       <div className="container py-10">
         <Reveal>
           <SectionHeading
-            eyebrow="Bundles"
-            title="Combo Deals"
-            subtitle="Hand-picked product sets at special bundle prices — everything you need for one job, in one click."
+            eyebrow={t.combos.eyebrow}
+            title={t.combos.title}
+            subtitle={t.combos.subtitle}
           />
         </Reveal>
 
@@ -182,8 +185,8 @@ export default function CombosPage() {
           <ProductGridSkeleton count={4} />
         ) : visible.length === 0 ? (
           <EmptyState
-            title="No combo deals right now"
-            description="Check back soon — new bundles are added regularly."
+            title={t.combos.emptyTitle}
+            description={t.combos.emptySub}
           />
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

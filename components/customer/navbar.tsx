@@ -230,11 +230,11 @@ export function Navbar({ announcement }: { announcement?: string }) {
 
               <LanguageToggle />
 
-              {/* Wishlist */}
+              {/* Wishlist — hidden on very small screens (it's in the drawer) */}
               <Link
                 href="/wishlist"
                 aria-label={t.header.wishlist}
-                className="relative flex h-10 w-10 items-center justify-center rounded-full text-foreground/70 ring-1 ring-black/5 transition-all duration-200 hover:bg-black/[0.04] hover:text-foreground active:scale-95 dark:text-foreground/70 dark:ring-white/10 dark:hover:bg-white/10 dark:hover:text-foreground"
+                className="relative hidden h-10 w-10 items-center justify-center rounded-full text-foreground/70 ring-1 ring-black/5 transition-all duration-200 hover:bg-black/[0.04] hover:text-foreground active:scale-95 min-[420px]:flex dark:text-foreground/70 dark:ring-white/10 dark:hover:bg-white/10 dark:hover:text-foreground"
               >
                 <Heart size={18} strokeWidth={1.8} />
                 <BadgeCount count={wishlistCount} />

@@ -8,6 +8,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CalendarCheck, Hammer, MapPin } from "lucide-react";
+import { useLanguage } from "@/lib/i18n";
 import { SiteShell } from "@/components/customer/site-shell";
 import { Reveal } from "@/components/customer/reveal";
 import { BeforeAfterSlider } from "@/components/customer/before-after-slider";
@@ -16,6 +17,7 @@ import { useProjects } from "@/components/customer/data-hooks";
 import { fmtDate } from "@/components/admin/firebase";
 
 export default function PortfolioPage() {
+  const { t } = useLanguage();
   const { items, loading, configured } = useProjects();
 
   const list = [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -27,14 +29,13 @@ export default function PortfolioPage() {
       <div className="container py-10 sm:py-14">
         <Reveal>
           <p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.25em] text-[#D21F26]">
-            <Hammer size={14} /> Interior design portfolio
+            <Hammer size={14} /> {t.portfolio.eyebrow}
           </p>
           <h1 className="font-display text-3xl font-extrabold tracking-tight sm:text-5xl">
-            Before <span className="text-[#D21F26]">&amp;</span> After
+            {t.portfolio.before} <span className="text-[#D21F26]">&amp;</span> {t.portfolio.after}
           </h1>
           <p className="mt-3 max-w-2xl text-muted-foreground">
-            Real spaces transformed by the HTC design team. Drag the handle to
-            compare — every project below started as an empty room.
+            {t.portfolio.subtitle}
           </p>
         </Reveal>
 
@@ -42,8 +43,8 @@ export default function PortfolioPage() {
           <ProductGridSkeleton />
         ) : !configured || list.length === 0 ? (
           <EmptyState
-            title="Portfolio coming soon"
-            description="Our latest interior transformations will appear here."
+            title={t.portfolio.emptyTitle}
+            description={t.portfolio.emptySub}
           />
         ) : (
           <>
@@ -80,7 +81,7 @@ export default function PortfolioPage() {
                           href="/book-consultation"
                           className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#D21F26] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#a8161c]"
                         >
-                          Book a consultation <ArrowRight size={16} />
+                          {t.portfolio.bookConsultation} <ArrowRight size={16} className="rtl:rotate-180" />
                         </Link>
                       </div>
                     </article>
@@ -93,7 +94,7 @@ export default function PortfolioPage() {
             {rest.length > 0 && (
               <div className="mt-16">
                 <h2 className="font-display text-2xl font-extrabold">
-                  More of our work
+                  {t.portfolio.moreWork}
                 </h2>
                 <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                   {rest.map((p) => (
@@ -113,7 +114,7 @@ export default function PortfolioPage() {
                             />
                           ) : (
                             <div className="flex h-full items-center justify-center text-muted-foreground">
-                              No image
+                              {t.portfolio.noImage}
                             </div>
                           )}
                         </div>
@@ -143,20 +144,19 @@ export default function PortfolioPage() {
             />
             <div className="relative max-w-2xl">
               <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.25em] text-[#ff6b6b]">
-                <CalendarCheck size={14} /> Free consultation
+                <CalendarCheck size={14} /> {t.portfolio.freeConsultation}
               </p>
               <h2 className="mt-3 font-display text-2xl font-extrabold sm:text-4xl">
-                Like what you see? Let&apos;s design your space.
+                {t.portfolio.ctaTitle}
               </h2>
               <p className="mt-3 text-white/70">
-                Tell us about your room and our designers will plan the full
-                transformation — furniture, fittings and finishes.
+                {t.portfolio.ctaSub}
               </p>
               <Link
                 href="/book-consultation"
                 className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#D21F26] px-8 py-3.5 font-bold text-white transition hover:bg-[#a8161c]"
               >
-                Book Consultation <ArrowRight size={18} />
+                {t.portfolio.ctaButton} <ArrowRight size={18} className="rtl:rotate-180" />
               </Link>
             </div>
           </div>

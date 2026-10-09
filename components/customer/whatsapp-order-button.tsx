@@ -10,6 +10,7 @@
 
 import { MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n";
 import { useSiteSettings } from "@/components/customer/data-hooks";
 import { buildWhatsAppOrderUrl } from "@/lib/whatsapp-order";
 
@@ -32,6 +33,7 @@ export function WhatsAppOrderButton({
   className,
 }: Props) {
   const { settings } = useSiteSettings();
+  const { t } = useLanguage();
   const href = buildWhatsAppOrderUrl(settings?.whatsappNumber, {
     productName,
     priceLabel,
@@ -44,7 +46,7 @@ export function WhatsAppOrderButton({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label={`Order ${productName} on WhatsApp`}
+      aria-label={t.whatsapp.orderLabel(productName)}
       className={cn(
         "inline-flex items-center justify-center gap-2 rounded-full bg-[#1FA855] font-bold text-white shadow-lg transition",
         "hover:bg-[#178a44] hover:shadow-xl active:scale-[0.98]",
@@ -53,7 +55,7 @@ export function WhatsAppOrderButton({
       )}
     >
       <MessageCircle size={size === "full" ? 19 : 15} className="shrink-0" />
-      WhatsApp par Order Karein
+      {t.whatsapp.orderOnWhatsApp}
     </a>
   );
 }

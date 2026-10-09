@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
 import { formatPKR } from "@/lib/format";
+import { useLanguage } from "@/lib/i18n";
 import { useCartStore } from "@/lib/store/cart";
 import { Button } from "@/components/ui/button";
 
@@ -21,6 +22,7 @@ export function CartDrawer({
   open: boolean;
   onClose: () => void;
 }) {
+  const { t } = useLanguage();
   const lines = useCartStore((s) => s.lines);
   const updateQty = useCartStore((s) => s.updateQty);
   const removeLine = useCartStore((s) => s.removeLine);
@@ -55,14 +57,14 @@ export function CartDrawer({
             <div className="flex items-center justify-between border-b px-5 py-4">
               <h2 className="flex items-center gap-2 font-display text-lg font-extrabold">
                 <ShoppingCart size={20} className="text-[#D21F26]" />
-                Your Cart
+                {t.cart.title}
                 <span className="rounded-full bg-[#D21F26]/10 px-2.5 py-0.5 text-xs font-bold text-[#D21F26]">
                   {lines.length}
                 </span>
               </h2>
               <button
                 onClick={onClose}
-                aria-label="Close cart"
+                aria-label={t.cart.closeCart}
                 className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted"
               >
                 <X size={18} />
@@ -73,16 +75,16 @@ export function CartDrawer({
               {lines.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center text-center">
                   <ShoppingCart size={44} className="text-muted-foreground/40" />
-                  <p className="mt-4 font-display font-bold">Your cart is empty</p>
+                  <p className="mt-4 font-display font-bold">{t.cart.empty}</p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Beautiful furniture is waiting for you.
+                    {t.cart.emptySub}
                   </p>
                   <Button
                     asChild
                     className="mt-5 rounded-full bg-[#D21F26] hover:bg-[#a8161c]"
                     onClick={onClose}
                   >
-                    <Link href="/shop">Start Shopping</Link>
+                    <Link href="/shop">{t.cart.startShopping}</Link>
                   </Button>
                 </div>
               ) : (
@@ -117,7 +119,7 @@ export function CartDrawer({
                           <div className="flex items-center gap-2 rounded-full border px-1 py-0.5">
                             <button
                               onClick={() => updateQty(l.key, l.qty - 1)}
-                              aria-label="Decrease quantity"
+                              aria-label={t.product.decreaseQty}
                               className="flex h-6 w-6 items-center justify-center rounded-full hover:bg-muted"
                             >
                               <Minus size={13} />
@@ -127,7 +129,7 @@ export function CartDrawer({
                             </span>
                             <button
                               onClick={() => updateQty(l.key, l.qty + 1)}
-                              aria-label="Increase quantity"
+                              aria-label={t.product.increaseQty}
                               className="flex h-6 w-6 items-center justify-center rounded-full hover:bg-muted"
                             >
                               <Plus size={13} />
@@ -140,7 +142,7 @@ export function CartDrawer({
                       </div>
                       <button
                         onClick={() => removeLine(l.key)}
-                        aria-label="Remove item"
+                        aria-label={t.cart.removeItem}
                         className="self-start rounded-full p-1.5 text-muted-foreground transition hover:bg-red-50 hover:text-red-600"
                       >
                         <Trash2 size={15} />
@@ -154,7 +156,7 @@ export function CartDrawer({
             {lines.length > 0 && (
               <div className="border-t px-5 py-4">
                 <div className="mb-4 flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Subtotal</span>
+                  <span className="text-sm text-muted-foreground">{t.cart.subtotal}</span>
                   <span className="font-display text-xl font-extrabold">
                     {formatPKR(subtotal)}
                   </span>
@@ -164,13 +166,13 @@ export function CartDrawer({
                   disabled={closing}
                   className="w-full rounded-full bg-[#D21F26] py-6 text-base font-bold hover:bg-[#a8161c]"
                 >
-                  Checkout <ArrowRight size={18} />
+                  {t.cart.checkout} <ArrowRight size={18} />
                 </Button>
                 <button
                   onClick={onClose}
                   className="mt-2 w-full py-2 text-center text-sm font-medium text-muted-foreground hover:text-foreground"
                 >
-                  Continue shopping
+                  {t.cart.continueShopping}
                 </button>
               </div>
             )}

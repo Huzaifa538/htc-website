@@ -21,6 +21,7 @@ import {
 import { toast } from "sonner";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db, isFirebaseConfigured } from "@/lib/firebase/client";
+import { useLanguage } from "@/lib/i18n";
 import { SiteShell } from "@/components/customer/site-shell";
 import { HeroSlider } from "@/components/customer/hero-slider";
 import { FlashSaleBanner } from "@/components/flash-sale-banner";
@@ -49,41 +50,25 @@ interface Testimonial {
   rating: number;
 }
 
-const FALLBACK_TESTIMONIALS: Testimonial[] = [
-  {
-    name: "Ayesha Khan",
-    text: "The L-shaped sofa completely changed our living room. Stitching, fabric, comfort — everything is premium. Delivery was on time too.",
-    rating: 5,
-  },
-  {
-    name: "Bilal Ahmed",
-    text: "HTC designed our entire 10-marla house interior. Their team listened to every detail and the finish is beyond what we imagined.",
-    rating: 5,
-  },
-  {
-    name: "Fatima Raza",
-    text: "Ordered a dining set online. Genuine sheesham wood, exactly as shown in pictures. Cash on delivery made it totally risk-free.",
-    rating: 4,
-  },
-];
-
-function useTestimonials(): Testimonial[] {
+function useTestimonials() {
+  const { t } = useLanguage();
   const { settings } = useSiteSettings();
   const extra = (settings as (SiteSettings & { testimonials?: Testimonial[] }) | null)
     ?.testimonials;
   if (Array.isArray(extra) && extra.length > 0) return extra;
-  return FALLBACK_TESTIMONIALS;
+  return t.homeExtra.testimonials;
 }
 
 function Categories() {
+  const { t } = useLanguage();
   const { items, loading, configured } = useCategories();
   const cats = [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).slice(0, 8);
   if (loading) return <ProductGridSkeleton count={4} />;
   if (!configured || cats.length === 0) {
     return (
       <EmptyState
-        title="Categories coming soon"
-        description="We're setting up our furniture collections — check back shortly."
+        title={t.home.categoriesSoon}
+        description={t.home.categoriesSoonSub}
       />
     );
   }
@@ -110,7 +95,7 @@ function Categories() {
                 {c.name}
               </h3>
               <span className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-white/80 transition group-hover:gap-2 group-hover:text-white">
-                Shop now <ArrowRight size={15} />
+                {t.home.shopNow} <ArrowRight size={15} className="rtl:rotate-180" />
               </span>
             </div>
           </Link>
@@ -121,6 +106,7 @@ function Categories() {
 }
 
 function NewArrivals() {
+  const { t } = useLanguage();
   const { products, loading, configured } = useProducts();
   const items = [...products]
     .sort((a, b) => tsMillis(b.createdAt) - tsMillis(a.createdAt))
@@ -129,9 +115,9 @@ function NewArrivals() {
   if (!configured || items.length === 0) {
     return (
       <EmptyState
-        title="New arrivals coming soon"
-        description="Fresh hardware stock is on its way to the store."
-        actionLabel="Browse Shop"
+        title={t.home.arrivalsSoon}
+        description={t.home.arrivalsSoonSub}
+        actionLabel={t.home.browseShop}
         actionHref="/shop"
       />
     );
@@ -148,6 +134,7 @@ function NewArrivals() {
 }
 
 function BestSellers() {
+  const { t } = useLanguage();
   const { products, loading, configured } = useProducts();
   const items = [...products]
     .sort((a, b) => (b.soldCount ?? 0) - (a.soldCount ?? 0))
@@ -156,9 +143,9 @@ function BestSellers() {
   if (!configured || items.length === 0) {
     return (
       <EmptyState
-        title="Best sellers coming soon"
-        description="Our most loved pieces will appear here."
-        actionLabel="Browse Shop"
+        title={t.home.sellersSoon}
+        description={t.home.sellersSoonSub}
+        actionLabel={t.home.browseShop}
         actionHref="/shop"
       />
     );
@@ -175,15 +162,16 @@ function BestSellers() {
 }
 
 function FeaturedServices() {
+  const { t } = useLanguage();
   const { items, loading, configured } = useServices();
   const list = [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).slice(0, 4);
   if (loading) return <ProductGridSkeleton count={4} />;
   if (!configured || list.length === 0) {
     return (
       <EmptyState
-        title="Services coming soon"
-        description="Interior design and home services are being prepared."
-        actionLabel="View Services"
+        title={t.home.servicesSoon}
+        description={t.home.servicesSoonSub}
+        actionLabel={t.home.viewServices}
         actionHref="/services"
       />
     );
@@ -211,7 +199,7 @@ function FeaturedServices() {
                 {s.description}
               </p>
               <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-[#D21F26]">
-                Get Quote <ArrowRight size={15} />
+                {t.home.getQuote} <ArrowRight size={15} className="rtl:rotate-180" />
               </span>
             </div>
           </Link>
@@ -222,6 +210,7 @@ function FeaturedServices() {
 }
 
 function ProjectsPreview() {
+  const { t } = useLanguage();
   const { items, loading, configured } = useProjects();
   const featured = items
     .filter((p) => p.featured)
@@ -231,9 +220,9 @@ function ProjectsPreview() {
   if (!configured || show.length === 0) {
     return (
       <EmptyState
-        title="Projects coming soon"
-        description="Take a look at our interior transformations — coming shortly."
-        actionLabel="View Projects"
+        title={t.home.projectsSoon}
+        description={t.home.projectsSoonSub}
+        actionLabel={t.home.viewProjects}
         actionHref="/projects"
       />
     );
@@ -285,6 +274,7 @@ function ProjectsPreview() {
 }
 
 function VideosPreview() {
+  const { t } = useLanguage();
   const { items, loading, configured } = useGalleryVideos();
   const list = [...items]
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
@@ -293,9 +283,9 @@ function VideosPreview() {
   return (
     <section className="container mt-20">
       <SectionHeading
-        eyebrow="Watch"
-        title="Video Gallery"
-        subtitle="Factory tours, craftsmanship and finished interiors."
+        eyebrow={t.home.watch}
+        title={t.home.videoGallery}
+        subtitle={t.home.videoGallerySub}
       />
       <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
         {list.map((v, i) => (
@@ -325,7 +315,7 @@ function VideosPreview() {
           href="/gallery"
           className="inline-flex items-center gap-2 rounded-full border px-7 py-3 font-bold transition hover:border-[#D21F26] hover:text-[#D21F26]"
         >
-          View Full Gallery <ArrowRight size={16} />
+          {t.home.viewFullGallery} <ArrowRight size={16} className="rtl:rotate-180" />
         </Link>
       </div>
     </section>
@@ -333,13 +323,14 @@ function VideosPreview() {
 }
 
 function Testimonials() {
+  const { t } = useLanguage();
   const list = useTestimonials();
   return (
     <section className="mt-20 bg-[#FBF3E4] py-16 dark:bg-stone-950/60">
       <div className="container">
         <SectionHeading
-          eyebrow="Reviews"
-          title="Loved by Pakistani Homes"
+          eyebrow={t.home.reviews}
+          title={t.home.lovedByHomes}
         />
         <div className="grid gap-5 md:grid-cols-3">
           {list.map((t, i) => (
@@ -367,38 +358,13 @@ function Testimonials() {
   );
 }
 
-const WHY = [
-  {
-    icon: Award,
-    title: "Genuine Quality",
-    text: "Sourced from trusted suppliers and quality-checked before dispatch.",
-  },
-  {
-    icon: Truck,
-    title: "Nationwide Delivery",
-    text: "Safe, insured delivery to every corner of Pakistan.",
-  },
-  {
-    icon: BadgeCheck,
-    title: "Cash on Delivery",
-    text: "Pay at your doorstep. Inspect your order before you pay.",
-  },
-  {
-    icon: Headset,
-    title: "Dedicated Support",
-    text: "Real humans on WhatsApp and chat, 7 days a week.",
-  },
-];
+const WHY_ICONS = [Award, Truck, BadgeCheck, Headset];
 
 function Stats() {
+  const { t } = useLanguage();
   const { about } = useAboutContent();
   // Prefer the CMS-managed stats (admin About page); fall back to defaults.
-  const stats = (about?.stats?.length ? about.stats : [
-    { label: "Happy Customers", value: "8,500+" },
-    { label: "Projects Completed", value: "1,200+" },
-    { label: "Years of Craft", value: "15+" },
-    { label: "Cities Served", value: "25+" },
-  ]).map((s) => {
+  const stats = (about?.stats?.length ? about.stats : t.homeExtra.defaultStats).map((s) => {
     const m = s.value.replace(/,/g, "").match(/[\d.]+/);
     return {
       label: s.label,
@@ -425,6 +391,7 @@ function Stats() {
 }
 
 function Newsletter() {
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -432,7 +399,7 @@ function Newsletter() {
     e.preventDefault();
     const value = email.trim();
     if (!/^\S+@\S+\.\S+$/.test(value)) {
-      toast.error("Please enter a valid email address");
+      toast.error(t.home.validEmail);
       return;
     }
     setBusy(true);
@@ -443,10 +410,10 @@ function Newsletter() {
           createdAt: serverTimestamp(),
         });
       }
-      toast.success("Subscribed! Welcome to the HTC family.");
+      toast.success(t.home.subscribed);
       setEmail("");
     } catch {
-      toast.error("Subscription failed — please try again.");
+      toast.error(t.home.subscribeFailed);
     } finally {
       setBusy(false);
     }
@@ -459,29 +426,28 @@ function Newsletter() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_55%)]" />
           <div className="relative">
             <h2 className="font-display text-3xl font-extrabold sm:text-4xl">
-              Get Rs 1,000 off your first order
+              {t.home.newsletterTitle}
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-white/85">
-              Join the HTC newsletter for exclusive deals, new arrivals and
-              interior design tips.
+              {t.home.newsletterSub}
             </p>
             <form
               onSubmit={submit}
-              className="mx-auto mt-7 flex max-w-md items-center gap-2 rounded-full bg-white p-1.5"
+              className="mx-auto mt-7 flex max-w-md flex-col gap-2 sm:flex-row sm:items-center sm:rounded-full sm:bg-white sm:p-1.5"
             >
               <input
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 type="email"
-                placeholder="Your email address"
-                className="w-full bg-transparent px-4 text-sm text-stone-900 outline-none placeholder:text-stone-400"
+                placeholder={t.home.yourEmail}
+                className="w-full rounded-full bg-white px-4 py-3 text-sm text-stone-900 outline-none placeholder:text-stone-400 sm:bg-transparent sm:py-0"
               />
               <button
                 type="submit"
                 disabled={busy}
                 className="shrink-0 rounded-full bg-stone-950 px-6 py-3 text-sm font-bold text-white transition hover:bg-stone-800 disabled:opacity-50"
               >
-                {busy ? "…" : "Subscribe"}
+                {busy ? "…" : t.home.subscribe}
               </button>
             </form>
           </div>
@@ -492,6 +458,7 @@ function Newsletter() {
 }
 
 export default function HomePage() {
+  const { t } = useLanguage();
   return (
     <SiteShell>
       <FlashSaleBanner />
@@ -499,9 +466,9 @@ export default function HomePage() {
 
       <section className="container mt-16">
         <SectionHeading
-          eyebrow="Collections"
-          title="Shop by Category"
-          subtitle="Door locks, handles, hinges and fittings for every project."
+          eyebrow={t.home.collections}
+          title={t.home.shopByCategory}
+          subtitle={t.home.shopByCategorySub}
         />
         <Categories />
       </section>
@@ -510,17 +477,17 @@ export default function HomePage() {
         <div className="mb-10 flex items-end justify-between">
           <div>
             <p className="mb-2 text-xs font-bold uppercase tracking-[0.25em] text-[#D21F26]">
-              Fresh stock
+              {t.home.freshStock}
             </p>
             <h2 className="font-display text-3xl font-extrabold tracking-tight sm:text-4xl">
-              New Arrivals
+              {t.home.newArrivals}
             </h2>
           </div>
           <Link
             href="/shop?sort=newest"
             className="hidden items-center gap-1.5 rounded-full border px-5 py-2.5 text-sm font-bold transition hover:border-[#D21F26] hover:text-[#D21F26] sm:inline-flex"
           >
-            View all <ArrowRight size={15} />
+            {t.home.viewAll} <ArrowRight size={15} className="rtl:rotate-180" />
           </Link>
         </div>
         <NewArrivals />
@@ -528,9 +495,9 @@ export default function HomePage() {
 
       <section className="container mt-20">
         <SectionHeading
-          eyebrow="Customer favourites"
-          title="Best Sellers"
-          subtitle="The pieces Pakistani homes keep choosing."
+          eyebrow={t.home.customerFavourites}
+          title={t.home.bestSellers}
+          subtitle={t.home.bestSellersSub}
         />
         <BestSellers />
       </section>
@@ -539,10 +506,10 @@ export default function HomePage() {
         <div className="mb-10 flex items-end justify-between">
           <div>
             <p className="mb-2 text-xs font-bold uppercase tracking-[0.25em] text-[#D21F26]">
-              Interior design
+              {t.home.interiorDesign}
             </p>
             <h2 className="font-display text-3xl font-extrabold tracking-tight sm:text-4xl">
-              Our Services
+              {t.home.ourServices}
             </h2>
           </div>
           <div className="hidden items-center gap-2 sm:inline-flex">
@@ -550,13 +517,13 @@ export default function HomePage() {
               href="/book-consultation"
               className="inline-flex items-center gap-1.5 rounded-full bg-[#D21F26] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#a8161c]"
             >
-              <CalendarCheck size={15} /> Book Consultation
+              <CalendarCheck size={15} /> {t.home.bookConsultation}
             </Link>
             <Link
               href="/services"
               className="inline-flex items-center gap-1.5 rounded-full border px-5 py-2.5 text-sm font-bold transition hover:border-[#D21F26] hover:text-[#D21F26]"
             >
-              All services <ArrowRight size={15} />
+              {t.home.allServices} <ArrowRight size={15} className="rtl:rotate-180" />
             </Link>
           </div>
         </div>
@@ -566,7 +533,7 @@ export default function HomePage() {
             href="/book-consultation"
             className="inline-flex items-center gap-1.5 rounded-full bg-[#D21F26] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#a8161c]"
           >
-            <CalendarCheck size={15} /> Book Consultation
+            <CalendarCheck size={15} /> {t.home.bookConsultation}
           </Link>
         </div>
       </section>
@@ -575,17 +542,17 @@ export default function HomePage() {
         <div className="mb-10 flex items-end justify-between">
           <div>
             <p className="mb-2 text-xs font-bold uppercase tracking-[0.25em] text-[#D21F26]">
-              Transformations
+              {t.home.transformations}
             </p>
             <h2 className="font-display text-3xl font-extrabold tracking-tight sm:text-4xl">
-              Recent Projects
+              {t.home.recentProjects}
             </h2>
           </div>
           <Link
             href="/projects"
             className="hidden items-center gap-1.5 rounded-full border px-5 py-2.5 text-sm font-bold transition hover:border-[#D21F26] hover:text-[#D21F26] sm:inline-flex"
           >
-            All projects <ArrowRight size={15} />
+            {t.home.allProjects} <ArrowRight size={15} className="rtl:rotate-180" />
           </Link>
         </div>
         <ProjectsPreview />
@@ -597,23 +564,26 @@ export default function HomePage() {
 
       <section className="container mt-20">
         <SectionHeading
-          eyebrow="Why HTC"
-          title="Why Choose Hammer Trading"
+          eyebrow={t.home.whyHtc}
+          title={t.home.whyChoose}
         />
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {WHY.map((w, i) => (
-            <Reveal key={w.title} delay={i * 0.07}>
-              <div className="h-full rounded-3xl border bg-card p-6 transition hover:shadow-lg">
-                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#D21F26]/10 text-[#D21F26]">
-                  <w.icon size={24} />
-                </span>
-                <h3 className="mt-4 font-display text-lg font-bold">{w.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  {w.text}
-                </p>
-              </div>
-            </Reveal>
-          ))}
+          {t.home.why.map((w, i) => {
+            const Icon = WHY_ICONS[i] ?? Award;
+            return (
+              <Reveal key={w.title} delay={i * 0.07}>
+                <div className="h-full rounded-3xl border bg-card p-6 transition hover:shadow-lg">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#D21F26]/10 text-[#D21F26]">
+                    <Icon size={24} />
+                  </span>
+                  <h3 className="mt-4 font-display text-lg font-bold">{w.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    {w.text}
+                  </p>
+                </div>
+              </Reveal>
+            );
+          })}
         </div>
       </section>
 

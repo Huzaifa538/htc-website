@@ -14,6 +14,7 @@ import { ProductCard } from "@/components/customer/product-card";
 import { Reveal } from "@/components/customer/reveal";
 import { EmptyState, ProductGridSkeleton } from "@/components/customer/skeletons";
 import { Stars } from "@/components/customer/stars";
+import { useLanguage } from "@/lib/i18n";
 import { useCategories, useProducts } from "@/components/customer/data-hooks";
 import { getProductPrice, tsMillis } from "@/components/customer/product-utils";
 import { formatPKR } from "@/lib/format";
@@ -31,21 +32,32 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 const PAGE_SIZE = 12;
-const SORTS = [
-  { value: "featured", label: "Featured" },
-  { value: "newest", label: "Newest" },
-  { value: "popular", label: "Most Popular" },
-  { value: "best-sellers", label: "Best Sellers" },
-  { value: "rating", label: "Top Rated" },
-  { value: "price-asc", label: "Price: Low to High" },
-  { value: "price-desc", label: "Price: High to Low" },
-];
+const SORT_VALUES = [
+  "featured",
+  "newest",
+  "popular",
+  "best-sellers",
+  "rating",
+  "price-asc",
+  "price-desc",
+] as const;
 
 function ShopClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { t } = useLanguage();
   const { products, loading, configured } = useProducts();
   const { items: categories } = useCategories();
+
+  const sortLabels: Record<(typeof SORT_VALUES)[number], string> = {
+    featured: t.shop.featured,
+    newest: t.shop.newest,
+    popular: t.shop.mostPopular,
+    "best-sellers": t.shop.bestSellers,
+    rating: t.shop.topRated,
+    "price-asc": t.shop.priceLowHigh,
+    "price-desc": t.shop.priceHighLow,
+  };
 
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [selectedCats, setSelectedCats] = useState<string[]>(
@@ -223,7 +235,7 @@ function ShopClient() {
       {/* Category */}
       <div>
         <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wider">
-          Category
+          {t.shop.category}
         </h2>
         <div className="space-y-2">
           {categories.map((c) => (
@@ -241,12 +253,12 @@ function ShopClient() {
       {/* Price */}
       <div>
         <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wider">
-          Price
+          {t.shop.price}
         </h2>
         <div className="flex items-center gap-2">
           <Input
             type="number"
-            placeholder="Min"
+            placeholder={t.shop.min}
             value={minPrice}
             onChange={(e) => {
               setMinPrice(e.target.value);
@@ -257,7 +269,7 @@ function ShopClient() {
           <span className="text-muted-foreground">–</span>
           <Input
             type="number"
-            placeholder={maxCatalogPrice ? formatPKR(maxCatalogPrice) : "Max"}
+            placeholder={maxCatalogPrice ? formatPKR(maxCatalogPrice) : t.shop.max}
             value={maxPrice}
             onChange={(e) => {
               setMaxPrice(e.target.value);
@@ -272,7 +284,7 @@ function ShopClient() {
       {allSizes.length > 0 && (
         <div>
           <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wider">
-            Size
+            {t.shop.size}
           </h2>
           <div className="flex flex-wrap gap-2">
             {allSizes.map((s) => (
@@ -297,7 +309,7 @@ function ShopClient() {
       {allColors.length > 0 && (
         <div>
           <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wider">
-            Color
+            {t.shop.color}
           </h2>
           <div className="flex flex-wrap gap-2.5">
             {allColors.map((c) => (
@@ -305,7 +317,7 @@ function ShopClient() {
                 key={c}
                 onClick={() => toggle(colors, c, setColors)}
                 title={c}
-                aria-label={`Filter by ${c}`}
+                aria-label={`${t.shop.color}: ${c}`}
                 className={cn(
                   "h-9 w-9 rounded-full ring-2 ring-offset-2 transition",
                   colors.includes(c) ? "ring-[#D21F26]" : "ring-transparent hover:ring-black/20"
@@ -320,13 +332,13 @@ function ShopClient() {
       {/* Rating */}
       <div>
         <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wider">
-          Rating
+          {t.shop.rating}
         </h2>
         <div className="space-y-2">
           {[
-            { v: 4, label: "4 stars & up" },
-            { v: 3, label: "3 stars & up" },
-            { v: 0, label: "Any rating" },
+            { v: 4, label: t.shop.starsUp(4) },
+            { v: 3, label: t.shop.starsUp(3) },
+            { v: 0, label: t.shop.anyRating },
           ].map((r) => (
             <label key={r.v} className="flex cursor-pointer items-center gap-2.5 text-sm">
               <input
@@ -351,7 +363,7 @@ function ShopClient() {
         onClick={reset}
         className="w-full rounded-full"
       >
-        <RotateCcw size={15} className="mr-2" /> Reset all filters
+        <RotateCcw size={15} className="mr-2 rtl:ml-2 rtl:mr-0" /> {t.shop.resetFilters}
       </Button>
     </div>
   );
@@ -361,10 +373,10 @@ function ShopClient() {
       <div className="container py-8">
         <Reveal>
           <h1 className="font-display text-3xl font-extrabold tracking-tight sm:text-4xl">
-            Shop Door Hardware &amp; Fittings
+            {t.shop.title}
           </h1>
           <p className="mt-2 text-muted-foreground">
-            {configured ? `${filtered.length} products` : "Browse our hardware collection."}
+            {configured ? t.shop.productsCount(filtered.length) : t.shop.browseCollection}
           </p>
         </Reveal>
 
@@ -377,7 +389,7 @@ function ShopClient() {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              placeholder="Search products…"
+              placeholder={t.shop.searchPlaceholder}
               className="rounded-full py-6 pl-5"
             />
             {suggestions.length > 0 && (
@@ -406,8 +418,8 @@ function ShopClient() {
               onClick={() => setFiltersOpen(true)}
               className="rounded-full lg:hidden"
             >
-              <SlidersHorizontal size={16} className="mr-2" />
-              Filters
+              <SlidersHorizontal size={16} className="mr-2 rtl:ml-2 rtl:mr-0" />
+              {t.shop.filters}
               {activeFilterCount > 0 && (
                 <span className="ml-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#D21F26] text-[10px] font-bold text-white">
                   {activeFilterCount}
@@ -422,12 +434,12 @@ function ShopClient() {
               }}
             >
               <SelectTrigger className="w-48 rounded-full">
-                <SelectValue placeholder="Sort by" />
+                <SelectValue placeholder={t.shop.sortBy} />
               </SelectTrigger>
               <SelectContent>
-                {SORTS.map((s) => (
-                  <SelectItem key={s.value} value={s.value}>
-                    {s.label}
+                {SORT_VALUES.map((v) => (
+                  <SelectItem key={v} value={v}>
+                    {sortLabels[v]}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -442,7 +454,7 @@ function ShopClient() {
               <Chip key={id} label={categories.find((c) => c.id === id)?.name ?? id} onClear={() => toggle(selectedCats, id, setSelectedCats)} />
             ))}
             {sizes.map((s) => (
-              <Chip key={s} label={`Size: ${s}`} onClear={() => toggle(sizes, s, setSizes)} />
+              <Chip key={s} label={t.shop.sizeFilter(s)} onClear={() => toggle(sizes, s, setSizes)} />
             ))}
             {colors.map((c) => (
               <Chip key={c} label={c} onClear={() => toggle(colors, c, setColors)} />
@@ -458,7 +470,7 @@ function ShopClient() {
               />
             )}
             {minRating > 0 && (
-              <Chip label={`${minRating}★ & up`} onClear={() => setMinRating(0)} />
+              <Chip label={t.shop.ratingFilter(minRating)} onClear={() => setMinRating(0)} />
             )}
           </div>
         )}
@@ -475,13 +487,13 @@ function ShopClient() {
               <ProductGridSkeleton count={12} />
             ) : !configured || filtered.length === 0 ? (
               <EmptyState
-                title={configured ? "No products found" : "Shop coming soon"}
+                title={configured ? t.shop.noProducts : t.shop.shopSoon}
                 description={
                   configured
-                    ? "Try adjusting your filters or search term."
-                    : "Our furniture catalog is being set up — check back shortly."
+                    ? t.shop.noProductsSub
+                    : t.shop.shopSoonSub
                 }
-                actionLabel={configured ? undefined : "Go Home"}
+                actionLabel={configured ? undefined : t.shop.goHome}
                 actionHref={configured ? undefined : "/"}
               />
             ) : (
@@ -557,7 +569,7 @@ function ShopClient() {
         <SheetContent side="left" className="w-80 overflow-y-auto">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
-              <SlidersHorizontal size={18} /> Filters
+              <SlidersHorizontal size={18} /> {t.shop.filters}
             </SheetTitle>
           </SheetHeader>
           <div className="mt-6" onClick={(e) => e.stopPropagation()}>
@@ -570,12 +582,13 @@ function ShopClient() {
 }
 
 function Chip({ label, onClear }: { label: string; onClear: () => void }) {
+  const { t } = useLanguage();
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full bg-[#D21F26]/10 py-1.5 pl-3.5 pr-2 text-xs font-bold text-[#D21F26]">
       {label}
       <button
         onClick={onClear}
-        aria-label={`Remove ${label} filter`}
+        aria-label={t.shop.removeFilter(label)}
         className="flex h-5 w-5 items-center justify-center rounded-full hover:bg-[#D21F26]/20"
       >
         <X size={12} />

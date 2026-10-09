@@ -12,6 +12,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Zap } from "lucide-react";
 import Link from "next/link";
+import { useLanguage } from "@/lib/i18n";
 import { useCollection } from "@/components/admin/firebase";
 import { COLLECTIONS } from "@/lib/firebase/collections";
 import type { FlashSale, WithId } from "@/lib/types";
@@ -46,6 +47,7 @@ function TimeChip({ value, label }: { value: string; label: string }) {
 
 export function FlashSaleBanner() {
   const sale = useActiveFlashSale();
+  const { t } = useLanguage();
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -77,20 +79,20 @@ export function FlashSaleBanner() {
       >
         <span className="flex items-center gap-2 font-display text-sm font-extrabold uppercase tracking-wide text-white sm:text-base">
           <Zap size={18} className="fill-yellow-300 text-yellow-300" />
-          Flash Sale! {sale.discountPct}% Off
+          {t.flashSale.title} {sale.discountPct}% {t.flashSale.off}
         </span>
         <span className="hidden text-sm font-medium text-white/85 sm:inline">
           {sale.title}
         </span>
         <span className="flex items-center gap-1.5">
-          <TimeChip value={hh} label="hrs" />
+          <TimeChip value={hh} label={t.flashSale.hrs} />
           <span className="font-extrabold text-white/80">:</span>
-          <TimeChip value={mm} label="min" />
+          <TimeChip value={mm} label={t.flashSale.min} />
           <span className="font-extrabold text-white/80">:</span>
-          <TimeChip value={ss} label="sec" />
+          <TimeChip value={ss} label={t.flashSale.sec} />
         </span>
         <span className="rounded-full bg-white px-3.5 py-1 text-xs font-extrabold uppercase tracking-wide text-[#D21F26] shadow">
-          Shop now
+          {t.flashSale.shopNow}
         </span>
       </Link>
     </motion.div>

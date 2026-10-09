@@ -32,6 +32,7 @@ import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db, isFirebaseConfigured } from "@/lib/firebase/client";
 import { COLLECTIONS } from "@/lib/firebase/collections";
 import { useAuth } from "@/components/providers";
+import { useLanguage } from "@/lib/i18n";
 import { SiteShell } from "@/components/customer/site-shell";
 import { ProductCard } from "@/components/customer/product-card";
 import { Reveal } from "@/components/customer/reveal";
@@ -95,6 +96,7 @@ export default function ProductPage({ id: propId }: { id?: string }) {
   const id = propId ?? (params?.id as string) ?? "";
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { product, loading, configured } = useProduct(id);
   const { products } = useProducts();
 
@@ -194,14 +196,14 @@ export default function ProductPage({ id: propId }: { id?: string }) {
     const line = currentLine();
     if (!line) return;
     if (line.stock <= 0) {
-      toast.error("This item is out of stock");
+      toast.error(t.productExtra.outOfStockToast);
       return;
     }
     addLine(line);
     if (buyNow) {
       router.push("/checkout");
     } else {
-      toast.success(`${product!.name} added to cart`);
+      toast.success(t.productCard.addedToCart(product!.name));
       openDrawer(true);
     }
   }
@@ -209,7 +211,7 @@ export default function ProductPage({ id: propId }: { id?: string }) {
   function handleChatAbout() {
     if (!product || !priceInfo) return;
     if (!user) {
-      toast.error("Please sign in to chat about this product");
+      toast.error(t.productCard.signInToChat);
       router.push(`/login?next=${encodeURIComponent(`/product/${id}`)}`);
       return;
     }
@@ -221,14 +223,14 @@ export default function ProductPage({ id: propId }: { id?: string }) {
       detail: formatPrice(priceInfo.price),
       href: `/product/${product.slug || product.id}`,
     });
-    toast.success("Chat opened — ask us anything about this product");
+    toast.success(t.productCard.chatOpened);
   }
 
   function pickReviewPhotos(files: FileList | null) {
     if (!files) return;
     const imgs = Array.from(files).filter((f) => f.type.startsWith("image/"));
     if (imgs.length === 0) {
-      toast.error("Please choose image files.");
+      toast.error(t.productExtra.chooseImages);
       return;
     }
     setReviewFiles((prev) => {
@@ -236,7 +238,7 @@ export default function ProductPage({ id: propId }: { id?: string }) {
         ...prev,
         ...imgs.map((file) => ({ file, preview: URL.createObjectURL(file) })),
       ].slice(0, 4);
-      if (prev.length + imgs.length > 4) toast.error("You can attach up to 4 photos.");
+      if (prev.length + imgs.length > 4) toast.error(t.productExtra.maxPhotos);
       return next;
     });
   }
@@ -253,7 +255,7 @@ export default function ProductPage({ id: propId }: { id?: string }) {
     e.preventDefault();
     if (!user || !product || !db) return;
     if (!reviewText.trim()) {
-      toast.error("Please write your review");
+      toast.error(t.product.writeReview);
       return;
     }
     setReviewBusy(true);
@@ -282,14 +284,14 @@ export default function ProductPage({ id: propId }: { id?: string }) {
         approved: false,
         createdAt: serverTimestamp(),
       });
-      toast.success("Review submitted — it will appear after approval.");
+      toast.success(t.product.reviewSubmitted);
       setReviewTitle("");
       setReviewText("");
       setReviewRating(5);
       reviewFiles.forEach((p) => URL.revokeObjectURL(p.preview));
       setReviewFiles([]);
     } catch {
-      toast.error("Could not submit review — please try again.");
+      toast.error(t.product.reviewFailed);
     } finally {
       setReviewBusy(false);
     }
@@ -316,9 +318,9 @@ export default function ProductPage({ id: propId }: { id?: string }) {
       <SiteShell>
         <div className="container py-16">
           <EmptyState
-            title="Product not found"
-            description="This product may have been removed or is unavailable."
-            actionLabel="Back to Shop"
+            title={t.product.notFound}
+            description={t.product.notFoundSub}
+            actionLabel={t.product.backToShop}
             actionHref="/shop"
           />
         </div>
@@ -333,9 +335,9 @@ export default function ProductPage({ id: propId }: { id?: string }) {
       <div className="container py-8">
         {/* Breadcrumb */}
         <nav aria-label="Breadcrumb" className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
-          <Link href="/" className="hover:text-foreground">Home</Link>
+          <Link href="/" className="hover:text-foreground">{t.nav.home}</Link>
           <span>/</span>
-          <Link href="/shop" className="hover:text-foreground">Shop</Link>
+          <Link href="/shop" className="hover:text-foreground">{t.nav.shop}</Link>
           <span>/</span>
           <span className="truncate font-medium text-foreground">{product.name}</span>
         </nav>
@@ -381,17 +383,17 @@ export default function ProductPage({ id: propId }: { id?: string }) {
                 <div className="mt-2 flex items-center gap-2">
                   <Stars rating={product.rating} size={16} />
                   <span className="text-sm text-muted-foreground">
-                    {product.rating.toFixed(1)} · {product.reviewCount} reviews ·{" "}
-                    {product.soldCount} sold
+                    {product.rating.toFixed(1)} · {product.reviewCount} {t.product.reviews} ·{" "}
+                    {t.productCard.sold(product.soldCount ?? 0)} {t.productCard.soldLabel.toLowerCase()}
                   </span>
                 </div>
               </div>
               <button
                 onClick={() => {
                   toggleWishlist(product.id);
-                  toast(wished ? "Removed from wishlist" : "Saved to wishlist");
+                  toast(wished ? t.productCard.removedFromWishlist : t.productCard.savedToWishlist);
                 }}
-                aria-label="Toggle wishlist"
+                aria-label={t.productExtra.toggleWishlist}
                 className={cn(
                   "flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition",
                   wished
@@ -414,13 +416,13 @@ export default function ProductPage({ id: propId }: { id?: string }) {
                     {formatPKR(priceInfo!.compareAt)}
                   </s>
                   <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-bold text-green-700 dark:bg-green-950 dark:text-green-300">
-                    Save {priceInfo!.discountPct}%
+                    {t.product.save} {priceInfo!.discountPct}%
                   </span>
                 </>
               )}
               {(product.deliveredCount ?? 0) > 0 && (
                 <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                  ✅ {product.deliveredCount} times delivered
+                  ✅ {t.product.delivered(product.deliveredCount ?? 0)}
                 </span>
               )}
             </div>
@@ -492,13 +494,13 @@ export default function ProductPage({ id: propId }: { id?: string }) {
                 )}
               >
                 <span className={cn("h-2 w-2 rounded-full", inStock ? "bg-green-600" : "bg-red-600")} />
-                {inStock ? `In stock (${priceInfo!.stock})` : "Out of stock"}
+                {inStock ? t.productCard.inStock(priceInfo!.stock) : t.productCard.outOfStock}
               </span>
               {combination && (
-                <span className="text-xs text-muted-foreground">SKU: {combination.sku}</span>
+                <span className="text-xs text-muted-foreground">{t.productCard.sku}: {combination.sku}</span>
               )}
               {!combination && product.sku && (
-                <span className="text-xs text-muted-foreground">SKU: {product.sku}</span>
+                <span className="text-xs text-muted-foreground">{t.productCard.sku}: {product.sku}</span>
               )}
             </div>
 
@@ -506,7 +508,7 @@ export default function ProductPage({ id: propId }: { id?: string }) {
               <div className="flex items-center gap-1 rounded-full border px-2 py-1.5">
                 <button
                   onClick={() => setQty((q) => Math.max(1, q - 1))}
-                  aria-label="Decrease quantity"
+                  aria-label={t.product.decreaseQty}
                   className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted"
                 >
                   <Minus size={16} />
@@ -514,7 +516,7 @@ export default function ProductPage({ id: propId }: { id?: string }) {
                 <span className="min-w-10 text-center text-lg font-extrabold">{qty}</span>
                 <button
                   onClick={() => setQty((q) => Math.min(Math.max(priceInfo!.stock, 1), q + 1))}
-                  aria-label="Increase quantity"
+                  aria-label={t.product.increaseQty}
                   className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted"
                 >
                   <Plus size={16} />
@@ -525,7 +527,7 @@ export default function ProductPage({ id: propId }: { id?: string }) {
                 disabled={!inStock || isPriceUnset(priceInfo!.price)}
                 className="flex-1 rounded-full bg-[#7C4A21] py-6 text-base font-bold text-white hover:bg-[#5f3a19]"
               >
-                <ShoppingCart size={18} className="mr-2" /> Add to Cart
+                <ShoppingCart size={18} className="mr-2 rtl:ml-2 rtl:mr-0" /> {t.productCard.addToCart}
               </Button>
             </div>
             {isPriceUnset(priceInfo!.price) ? (
@@ -536,12 +538,12 @@ export default function ProductPage({ id: propId }: { id?: string }) {
                 >
                   <a
                     href={`https://wa.me/923212476150?text=${encodeURIComponent(
-                      `Assalam-o-Alaikum! I want to inquire about "${product.name}" (Rs price on request).`
+                      t.productCard.inquireAbout(`"${product.name}"`)
                     )}`}
                     target="_blank"
                     rel="noreferrer"
                   >
-                    <MessageCircle size={18} className="mr-2" /> Ask Price on WhatsApp
+                    <MessageCircle size={18} className="mr-2 rtl:ml-2 rtl:mr-0" /> {t.product.askPriceOnWhatsApp}
                   </a>
                 </Button>
               </div>
@@ -552,14 +554,14 @@ export default function ProductPage({ id: propId }: { id?: string }) {
                 disabled={!inStock}
                 className="flex-1 rounded-full bg-[#D21F26] py-6 text-base font-bold hover:bg-[#a8161c]"
               >
-                <Zap size={18} className="mr-2" /> Buy Now
+                <Zap size={18} className="mr-2 rtl:ml-2 rtl:mr-0" /> {t.product.buyNow}
               </Button>
               <Button
                 variant="outline"
                 onClick={handleChatAbout}
                 className="flex-1 rounded-full py-6 font-bold"
               >
-                <MessageCircle size={18} className="mr-2" /> Chat about this
+                <MessageCircle size={18} className="mr-2 rtl:ml-2 rtl:mr-0" /> {t.product.chatAboutThis}
               </Button>
             </div>
             )}
@@ -583,9 +585,9 @@ export default function ProductPage({ id: propId }: { id?: string }) {
             {/* Trust badges */}
             <div className="mt-6 grid grid-cols-3 gap-3 text-center">
               {[
-                { icon: Truck, label: "Nationwide delivery" },
-                { icon: ShieldCheck, label: "Cash on delivery" },
-                { icon: Check, label: "Quality checked" },
+                { icon: Truck, label: t.productExtra.nationwide },
+                { icon: ShieldCheck, label: t.productExtra.cod },
+                { icon: Check, label: t.productExtra.qualityChecked },
               ].map((b) => (
                 <div key={b.label} className="rounded-2xl bg-muted/60 px-2 py-4">
                   <b.icon size={20} className="mx-auto text-[#D21F26]" />
@@ -599,7 +601,7 @@ export default function ProductPage({ id: propId }: { id?: string }) {
         {/* Description */}
         <Reveal className="mt-14">
           <div className="rounded-3xl border bg-card p-6 sm:p-8">
-            <h2 className="font-display text-2xl font-extrabold">Description</h2>
+            <h2 className="font-display text-2xl font-extrabold">{t.product.description}</h2>
             <div className="prose mt-4 max-w-none whitespace-pre-wrap text-[15px] leading-relaxed text-muted-foreground dark:prose-invert">
               {product.description}
             </div>
@@ -620,12 +622,12 @@ export default function ProductPage({ id: propId }: { id?: string }) {
           <Reveal className="mt-8">
             <div className="rounded-3xl border bg-card p-6 sm:p-8">
               <h2 className="flex items-center gap-2 font-display text-2xl font-extrabold">
-                <Play size={22} className="text-[#D21F26]" /> Installation Guide
+                <Play size={22} className="text-[#D21F26]" /> {t.productExtra.installationGuide}
               </h2>
               <div className="mt-4 aspect-video overflow-hidden rounded-2xl">
                 <iframe
                   src={embedUrl}
-                  title="Installation guide"
+                  title={t.productExtra.installationGuide}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                   className="h-full w-full"
@@ -640,16 +642,16 @@ export default function ProductPage({ id: propId }: { id?: string }) {
           <Reveal className="mt-8">
             <div className="rounded-3xl border bg-card p-6 sm:p-8">
               <h2 className="flex items-center gap-2 font-display text-2xl font-extrabold">
-                <Play size={22} className="text-[#D21F26]" /> Product Demo
+                <Play size={22} className="text-[#D21F26]" /> {t.productExtra.demoVideo}
               </h2>
               <p className="mt-1.5 text-sm text-muted-foreground">
-                Watch this product in action.
+                {t.product.watchInAction}
               </p>
               <div className="mt-4 aspect-video overflow-hidden rounded-2xl bg-black">
                 {demoEmbedUrl ? (
                   <iframe
                     src={demoEmbedUrl}
-                    title="Product demo video"
+                    title={t.productExtra.demoVideo}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                     className="h-full w-full"
@@ -672,7 +674,7 @@ export default function ProductPage({ id: propId }: { id?: string }) {
         <Reveal className="mt-8">
           <div className="rounded-3xl border bg-card p-6 sm:p-8">
             <h2 className="font-display text-2xl font-extrabold">
-              Customer Reviews ({product.reviewCount})
+              {t.product.customerReviews(product.reviewCount)}
             </h2>
 
             {reviewsLoading ? (
@@ -683,7 +685,7 @@ export default function ProductPage({ id: propId }: { id?: string }) {
               </div>
             ) : reviews.length === 0 ? (
               <p className="mt-4 text-sm text-muted-foreground">
-                No reviews yet — be the first to share your experience.
+                {t.product.noReviewsYet}
               </p>
             ) : (
               <ul className="mt-6 space-y-5">
@@ -712,10 +714,10 @@ export default function ProductPage({ id: propId }: { id?: string }) {
                             type="button"
                             onClick={() => setReviewLightbox({ photos: r.images!, index: i })}
                             className="relative h-16 w-16 overflow-hidden rounded-xl border transition hover:opacity-85"
-                            aria-label={`View review photo ${i + 1}`}
+                            aria-label={t.product.viewReviewPhoto(i + 1)}
                           >
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={src} alt={`Review photo ${i + 1}`} className="h-full w-full object-cover" />
+                            <img src={src} alt={t.product.reviewPhoto(i + 1)} className="h-full w-full object-cover" />
                           </button>
                         ))}
                       </div>
@@ -727,51 +729,51 @@ export default function ProductPage({ id: propId }: { id?: string }) {
 
             {/* Add review */}
             <div className="mt-8 border-t pt-6">
-              <h3 className="font-display text-lg font-bold">Write a review</h3>
+              <h3 className="font-display text-lg font-bold">{t.product.writeReviewTitle}</h3>
               {!isFirebaseConfigured() ? (
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Reviews are unavailable while the store backend is being configured.
+                  {t.product.reviewsUnavailable}
                 </p>
               ) : !user ? (
                 <p className="mt-2 text-sm text-muted-foreground">
                   <Link href={`/login?next=${encodeURIComponent(`/product/${id}`)}`} className="font-bold text-[#D21F26] hover:underline">
-                    Sign in
+                    {t.header.signIn}
                   </Link>{" "}
-                  to write a review.
+                  {t.product.signInToReview}
                 </p>
               ) : (
                 <form onSubmit={submitReview} className="mt-4 space-y-4">
                   <div>
-                    <p className="mb-2 text-sm font-semibold">Your rating</p>
+                    <p className="mb-2 text-sm font-semibold">{t.product.yourRating}</p>
                     <StarPicker value={reviewRating} onChange={setReviewRating} />
                   </div>
                   <Input
                     value={reviewTitle}
                     onChange={(e) => setReviewTitle(e.target.value)}
-                    placeholder="Review title (optional)"
+                    placeholder={t.product.reviewTitlePlaceholder}
                     className="rounded-xl"
                   />
                   <Textarea
                     value={reviewText}
                     onChange={(e) => setReviewText(e.target.value)}
-                    placeholder="Share your experience with this product…"
+                    placeholder={t.product.reviewPlaceholder}
                     rows={4}
                     className="rounded-xl"
                   />
                   <div>
                     <p className="mb-2 text-sm font-semibold">
-                      Photos <span className="font-normal text-muted-foreground">(optional, up to 4)</span>
+                      {t.product.photos} <span className="font-normal text-muted-foreground">{t.product.optionalUpTo4}</span>
                     </p>
                     <div className="flex flex-wrap items-center gap-2">
                       {reviewFiles.map((p) => (
                         <div key={p.preview} className="relative h-16 w-16 overflow-hidden rounded-xl border">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={p.preview} alt="Review photo preview" className="h-full w-full object-cover" />
+                          <img src={p.preview} alt={t.product.reviewPhotoPreview} className="h-full w-full object-cover" />
                           <button
                             type="button"
                             onClick={() => removeReviewPhoto(p.preview)}
                             className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-white hover:bg-[#D21F26]"
-                            aria-label="Remove photo"
+                            aria-label={t.productExtra.removePhoto}
                           >
                             <X size={12} />
                           </button>
@@ -780,7 +782,7 @@ export default function ProductPage({ id: propId }: { id?: string }) {
                       {reviewFiles.length < 4 && (
                         <label className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed text-muted-foreground transition hover:border-[#D21F26] hover:text-[#D21F26]">
                           <Camera size={20} />
-                          <span className="text-[10px] font-semibold">Add</span>
+                          <span className="text-[10px] font-semibold">{t.product.add}</span>
                           <input
                             type="file"
                             accept="image/*"
@@ -793,7 +795,7 @@ export default function ProductPage({ id: propId }: { id?: string }) {
                     </div>
                     {reviewUploading && (
                       <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                        <Loader2 size={12} className="animate-spin" /> Uploading photos…
+                        <Loader2 size={12} className="animate-spin" /> {t.product.uploadingPhotos}
                       </p>
                     )}
                   </div>
@@ -802,8 +804,8 @@ export default function ProductPage({ id: propId }: { id?: string }) {
                     disabled={reviewBusy}
                     className="rounded-full bg-[#D21F26] px-8 hover:bg-[#a8161c]"
                   >
-                    {reviewBusy ? <Loader2 size={16} className="mr-2 animate-spin" /> : null}
-                    Submit Review
+                    {reviewBusy ? <Loader2 size={16} className="mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : null}
+                    {t.product.submitReview}
                   </Button>
                 </form>
               )}
@@ -815,7 +817,7 @@ export default function ProductPage({ id: propId }: { id?: string }) {
         {related.length > 0 && (
           <div className="mt-14">
             <h2 className="mb-6 font-display text-2xl font-extrabold">
-              Related Products
+              {t.product.relatedProducts}
             </h2>
             <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-4">
               {related.map((p) => (
@@ -844,7 +846,7 @@ export default function ProductPage({ id: propId }: { id?: string }) {
                     e.stopPropagation();
                     setImgIndex((i) => (i - 1 + gallery.length) % gallery.length);
                   }}
-                  aria-label="Previous image"
+                  aria-label={t.productExtra.prevImage}
                   className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white hover:bg-[#D21F26]"
                 >
                   <ChevronLeft size={22} />
@@ -854,7 +856,7 @@ export default function ProductPage({ id: propId }: { id?: string }) {
                     e.stopPropagation();
                     setImgIndex((i) => (i + 1) % gallery.length);
                   }}
-                  aria-label="Next image"
+                  aria-label={t.productExtra.nextImage}
                   className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white hover:bg-[#D21F26]"
                 >
                   <ChevronRight size={22} />
@@ -872,7 +874,7 @@ export default function ProductPage({ id: propId }: { id?: string }) {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={reviewLightbox.photos[reviewLightbox.index]}
-                alt={`Review photo ${reviewLightbox.index + 1}`}
+                alt={t.product.reviewPhoto(reviewLightbox.index + 1)}
                 className="h-full w-full object-contain"
               />
               {reviewLightbox.photos.length > 1 && (
@@ -884,7 +886,7 @@ export default function ProductPage({ id: propId }: { id?: string }) {
                         s ? { photos: s.photos, index: (s.index - 1 + s.photos.length) % s.photos.length } : s
                       );
                     }}
-                    aria-label="Previous photo"
+                    aria-label={t.productExtra.prevPhoto}
                     className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white hover:bg-[#D21F26]"
                   >
                     <ChevronLeft size={22} />
@@ -896,7 +898,7 @@ export default function ProductPage({ id: propId }: { id?: string }) {
                         s ? { photos: s.photos, index: (s.index + 1) % s.photos.length } : s
                       );
                     }}
-                    aria-label="Next photo"
+                    aria-label={t.productExtra.nextPhoto}
                     className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white hover:bg-[#D21F26]"
                   >
                     <ChevronRight size={22} />
