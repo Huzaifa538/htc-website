@@ -1,10 +1,14 @@
 /**
- * Bot auto-switch — chat mein bot mode ka control.
+ * Bot auto-switch — chat mein do alag bots ka control.
  *
  * Firestore doc: siteSettings/chat
- *   { botEnabled, botAutoMode, adminLastSeen }
+ *   {
+ *     htc: { botEnabled, botAutoMode },   // purple — services/interior
+ *     mtr: { botEnabled, botAutoMode },   // blue — products/shop
+ *     adminLastSeen                        // shared heartbeat
+ *   }
  *
- * Logic:
+ * Logic (har brand ke liye alag):
  * - botEnabled OFF → bot kabhi jawab nahi dega
  * - botAutoMode ON → admin offline ho to bot ON, online ho to OFF
  * - botAutoMode OFF → botEnabled hi faisla karega (manual mode)
@@ -18,18 +22,25 @@ import { useEffect, useState } from "react";
 import { doc, onSnapshot, setDoc, serverTimestamp } from "firebase/firestore";
 import { db, isFirebaseConfigured } from "@/lib/firebase/client";
 import { COLLECTIONS } from "@/lib/firebase/collections";
+import type { ChatBrand } from "@/lib/types";
 
-/** siteSettings/chat doc ka shape. */
-export interface ChatBotSettings {
+/** Ek brand ke bot ki settings. */
+export interface BrandBotSettings {
   /** Bot kul milakar on hai ya off (master switch). */
   botEnabled: boolean;
   /** true = admin ki online/offline status se auto switch. */
   botAutoMode: boolean;
+}
+
+/** siteSettings/chat doc ka shape. */
+export interface ChatBotSettings {
+  htc: BrandBotSettings;
+  mtr: BrandBotSettings;
   /** Admin ne aakhri baar kab /admin khola tha. */
   adminLastSeen?: { toMillis: () => number } | null;
 }
 
-const DEFAULTS: ChatBotSettings = {
+const BRAND_DEFAULTS: BrandBotSettings = {
   botEnabled: true,
   botAutoMode: true,
 };
@@ -46,12 +57,44 @@ export function isAdminOnline(s: ChatBotSettings | null): boolean {
   }
 }
 
-/** Bot is waqt jawab dega ya nahi. */
-export function isBotActive(s: ChatBotSettings | null): boolean {
+/** Is brand ka bot is waqt jawab dega ya nahi. */
+export function isBotActiveForBrand(
+  s: ChatBotSettings | null,
+  brand: ChatBrand
+): boolean {
   if (!s) return true; // doc na ho to default ON (pehle jaisa behavior)
-  if (!s.botEnabled) return false;
-  if (s.botAutoMode) return !isAdminOnline(s);
+  const b = s[brand] ?? BRAND_DEFAULTS;
+  if (!b.botEnabled) return false;
+  if (b.botAutoMode) return !isAdminOnline(s);
   return true;
+}
+
+/** Purane flat doc ({botEnabled, botAutoMode}) ko naye shape mein lao. */
+function normalize(
+  data: Record<string, unknown> | undefined
+): ChatBotSettings {
+  const fresh = (): ChatBotSettings => ({
+    htc: { ...BRAND_DEFAULTS },
+    mtr: { ...BRAND_DEFAULTS },
+  });
+  if (!data) return fresh();
+  const out = fresh();
+  for (const brand of ["htc", "mtr"] as const) {
+    const b = data[brand] as Partial<BrandBotSettings> | undefined;
+    if (b && typeof b === "object") {
+      if (typeof b.botEnabled === "boolean") out[brand].botEnabled = b.botEnabled;
+      if (typeof b.botAutoMode === "boolean") out[brand].botAutoMode = b.botAutoMode;
+    } else {
+      // purana flat format — dono brands par lagao
+      if (typeof data.botEnabled === "boolean")
+        out[brand].botEnabled = data.botEnabled as boolean;
+      if (typeof data.botAutoMode === "boolean")
+        out[brand].botAutoMode = data.botAutoMode as boolean;
+    }
+  }
+  const lastSeen = data.adminLastSeen as ChatBotSettings["adminLastSeen"];
+  if (lastSeen) out.adminLastSeen = lastSeen;
+  return out;
 }
 
 /** siteSettings/chat ko real-time suno. */
@@ -69,9 +112,11 @@ export function useBotMode() {
       doc(db, COLLECTIONS.siteSettings, "chat"),
       (snap) => {
         setSettings(
-          snap.exists()
-            ? { ...DEFAULTS, ...(snap.data() as Partial<ChatBotSettings>) }
-            : { ...DEFAULTS }
+          normalize(
+            snap.exists()
+              ? (snap.data() as Record<string, unknown>)
+              : undefined
+          )
         );
         setLoaded(true);
       },
@@ -80,12 +125,15 @@ export function useBotMode() {
     return unsub;
   }, [configured]);
 
+  const adminOnline = isAdminOnline(settings);
+
   return {
     settings,
     loaded,
     configured,
-    botActive: isBotActive(settings),
-    adminOnline: isAdminOnline(settings),
+    adminOnline,
+    /** brand do: "htc" | "mtr" */
+    botActiveFor: (brand: ChatBrand) => isBotActiveForBrand(settings, brand),
   };
 }
 

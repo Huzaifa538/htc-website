@@ -327,8 +327,16 @@ export function ChatWidget() {
                   >
                     <div className="max-w-[80%]">
                       {m.sender === "bot" && (
-                        <p className="mb-0.5 flex items-center gap-1 text-[10px] font-bold text-violet-600">
-                          <Bot size={11} /> {t.chatBot.title}
+                        <p
+                          className={cn(
+                            "mb-0.5 flex items-center gap-1 text-[10px] font-bold",
+                            m.brand === "htc"
+                              ? "text-violet-600"
+                              : "text-blue-600"
+                          )}
+                        >
+                          <Bot size={11} />{" "}
+                          {m.brand === "htc" ? t.htcBot.title : t.mtrBot.title}
                         </p>
                       )}
                       <div

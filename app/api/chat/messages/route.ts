@@ -24,16 +24,32 @@ import { findBotAnswer, botFallback } from "@/lib/bot-answers";
 /** 2 min se purana lastSeen = admin offline. */
 const ONLINE_WINDOW_MS = 2 * 60 * 1000;
 
-/** siteSettings/chat se bot is waqt active hai ya nahi. */
-async function botIsActive(): Promise<boolean> {
+/** siteSettings/chat se is brand ka bot is waqt active hai ya nahi. */
+async function botIsActiveForBrand(brand: "htc" | "mtr"): Promise<boolean> {
   try {
     const snap = await adminDb!
       .collection(COLLECTIONS.siteSettings)
       .doc("chat")
       .get();
     const d = snap.exists ? (snap.data() as Record<string, unknown>) : {};
-    if (d.botEnabled === false) return false;
-    if (d.botAutoMode === false) return true; // manual mode → bot on
+
+    // naya nested format: { htc: {...}, mtr: {...} }
+    const nested = d[brand] as
+      | { botEnabled?: boolean; botAutoMode?: boolean }
+      | undefined;
+    let botEnabled: boolean | undefined;
+    let botAutoMode: boolean | undefined;
+    if (nested && typeof nested === "object") {
+      botEnabled = nested.botEnabled;
+      botAutoMode = nested.botAutoMode;
+    } else {
+      // purana flat format — dono brands par lagao
+      botEnabled = d.botEnabled as boolean | undefined;
+      botAutoMode = d.botAutoMode as boolean | undefined;
+    }
+
+    if (botEnabled === false) return false;
+    if (botAutoMode === false) return true; // manual mode → bot on
     // auto mode: admin online ho to bot off
     const lastSeen = d.adminLastSeen as
       | { toMillis?: () => number; toDate?: () => Date }
@@ -109,11 +125,12 @@ export async function POST(req: NextRequest) {
         { merge: true }
       );
 
-    // Bot auto-reply: admin offline ho (ya manual bot-on) to foran jawab do.
-    if (input.text && (await botIsActive())) {
+    // Bot auto-reply: is brand ka bot active ho to foran jawab do.
+    const brand = input.brand === "htc" ? "htc" : "mtr";
+    if (input.text && (await botIsActiveForBrand(brand))) {
+      const preferUrdu = /[\u0600-\u06FF]/.test(input.text);
       const answer =
-        findBotAnswer(input.text) ??
-        botFallback(/[\u0600-\u06FF]/.test(input.text));
+        findBotAnswer(input.text, brand) ?? botFallback(brand, preferUrdu);
       await messagesRef.add({
         chatId: input.userId,
         sender: "bot",

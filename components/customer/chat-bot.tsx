@@ -1,18 +1,26 @@
 /**
- * HTC helper bot — rule-based FAQ answers.
+ * Brand bots — do alag FAQ helpers.
  *
- * Delivery time, returns, payment, contact, timings waghera ke
- * aam sawalon ka jawab deta hai (Urdu + English). Jawab na mile
- * to WhatsApp par bhej deta hai.
+ * HTC Bot (purple): services, interior design, consultation, projects.
+ * MTR Bot (blue): products, shopping, orders, delivery.
+ *
+ * Kaunsa bot dikhega ye page ke brand par hai (shop routes → MTR,
+ * baqi → HTC). Admin online ho to bot khud band (auto-switch) aur
+ * "admin se baat karein" ka rasta dikhta hai.
  */
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { MessageCircle, Send, X } from "lucide-react";
+import { MessageCircle, Send, X, UserCheck } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n";
 import { useChatUiStore } from "@/lib/store/chat-ui";
-import type { Dictionary } from "@/lib/i18n/en";
+import { brandForRoute } from "@/lib/brand";
+import { useBotMode } from "@/lib/bot-mode";
+import { findBotAnswer, botFallback } from "@/lib/bot-answers";
+import type { ChatBrand } from "@/lib/types";
 
 interface Msg {
   from: "bot" | "user";
@@ -22,48 +30,29 @@ interface Msg {
 
 const WHATSAPP = "https://wa.me/923212476150";
 
-function findAnswer(q: string, t: Dictionary): string | null {
-  const s = q.toLowerCase();
-
-  const has = (...words: string[]) => words.some((w) => s.includes(w));
-
-  if (has("deliver", "shipping", "ship", "डिलीवरी", "پہنچ", "کب آئے", "کتنے دن", "پہنچے")) {
-    return t.chatBot.delivery;
-  }
-  if (has("return", "refund", "exchange", "واپس", "تبدیل")) {
-    return t.chatBot.returns;
-  }
-  if (has("payment", "pay", "cod", "cash", "jazzcash", "easypaisa", "card", "ادائیگی", "پیسے")) {
-    return t.chatBot.payment;
-  }
-  if (has("timing", "time", "open", "close", "hour", "ٹائم", "کھلا", "بند", "اوقات")) {
-    return t.chatBot.timings;
-  }
-  if (has("contact", "phone", "number", "whatsapp", "رابطہ", "فون", "نمبر")) {
-    return t.chatBot.contact;
-  }
-  if (has("location", "address", "shop", "store", "where", "پتہ", "دکان", "کہاں")) {
-    return t.chatBot.location;
-  }
-  if (has("price", "cost", "rate", "قیمت", "دام", "پیسے")) {
-    return t.chatBot.price;
-  }
-  if (has("salam", "assalam", "hello", "hi", "hey", "aoa", "السلام")) {
-    return t.chatBot.greeting;
-  }
-  if (has("thank", "shukriya", "شکریہ")) {
-    return t.chatBot.thanks;
-  }
-  return null;
-}
+const BRAND_COLOR: Record<ChatBrand, string> = {
+  htc: "#7C3AED", // purple
+  mtr: "#2563EB", // blue
+};
 
 export function ChatBot() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const pathname = usePathname();
+  const brand = brandForRoute(pathname);
+  const { botActiveFor, loaded } = useBotMode();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
   const openAdminChat = useChatUiStore((s) => s.openChat);
+
+  const botActive = botActiveFor(brand);
+  const color = BRAND_COLOR[brand];
+  const dict = brand === "htc" ? t.htcBot : t.mtrBot;
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [msgs, open]);
 
   // Admin se baat — bot band karo, messaging chat kholo
   function talkToAdmin() {
@@ -71,20 +60,17 @@ export function ChatBot() {
     openAdminChat();
   }
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [msgs, open]);
-
   function send(text: string) {
     const clean = text.trim();
     if (!clean) return;
-    const answer = findAnswer(clean, t);
+    const preferUrdu = lang === "ur" || /[\u0600-\u06FF]/.test(clean);
+    const answer = findBotAnswer(clean, brand);
     setMsgs((m) => [
       ...m,
       { from: "user", text: clean },
       {
         from: "bot",
-        text: answer ?? t.chatBot.fallback,
+        text: answer ?? botFallback(brand, preferUrdu),
         isFallback: !answer,
       },
     ]);
@@ -96,8 +82,9 @@ export function ChatBot() {
       {/* floating button */}
       <button
         onClick={() => setOpen((o) => !o)}
-        aria-label="HTC helper"
-        className="fixed bottom-40 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#7C3AED] text-white shadow-xl transition hover:scale-105"
+        aria-label={dict.title}
+        style={{ backgroundColor: color }}
+        className="fixed bottom-40 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-xl transition hover:scale-105"
       >
         {open ? <X size={24} /> : <MessageCircle size={24} />}
       </button>
@@ -111,27 +98,35 @@ export function ChatBot() {
             transition={{ duration: 0.2 }}
             className="fixed bottom-56 right-5 z-50 flex h-[420px] w-[320px] flex-col overflow-hidden rounded-2xl border bg-white shadow-2xl dark:bg-stone-900"
           >
-            <div className="bg-[#D21F26] px-4 py-3 text-white">
-              <p className="font-bold">{t.chatBot.title}</p>
-              <p className="text-xs opacity-80">{t.chatBot.subtitle}</p>
+            <div className="px-4 py-3 text-white" style={{ backgroundColor: color }}>
+              <p className="font-bold">{dict.title}</p>
+              <p className="text-xs opacity-80">{dict.subtitle}</p>
             </div>
 
             <button
               onClick={talkToAdmin}
-              className="mx-3 mt-2 rounded-full border border-[#7C3AED]/40 bg-violet-50 px-3 py-1.5 text-xs font-bold text-[#7C3AED] transition hover:bg-violet-100 dark:bg-violet-950/40"
+              className="mx-3 mt-2 flex items-center justify-center gap-1.5 rounded-full border border-stone-300 px-3 py-1.5 text-xs font-bold text-stone-700 transition hover:border-stone-400 dark:border-stone-700 dark:text-stone-300"
             >
-              {t.chatBot.talkToAdmin}
+              <UserCheck size={13} /> {t.chatBot.talkToAdmin}
             </button>
 
             <div className="flex-1 space-y-2 overflow-y-auto p-3">
-              {msgs.length === 0 && (
+              {!botActive && loaded && (
+                <p
+                  className="rounded-xl px-3 py-2 text-center text-xs font-semibold text-white"
+                  style={{ backgroundColor: color }}
+                >
+                  {t.chatBot.adminOnlineNote}
+                </p>
+              )}
+              {msgs.length === 0 && botActive && (
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">{t.chatBot.hint}</p>
-                  {t.chatBot.quick.map((q: string) => (
+                  {dict.quick.map((q: string) => (
                     <button
                       key={q}
                       onClick={() => send(q)}
-                      className="block w-full rounded-full border px-3 py-1.5 text-left text-xs transition hover:border-[#D21F26] hover:text-[#D21F26]"
+                      className="block w-full rounded-full border px-3 py-1.5 text-left text-xs transition hover:border-stone-400"
                     >
                       {q}
                     </button>
@@ -141,11 +136,13 @@ export function ChatBot() {
               {msgs.map((m, i) => (
                 <div
                   key={i}
-                  className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
+                  className={cn(
+                    "max-w-[85%] rounded-2xl px-3 py-2 text-sm",
                     m.from === "bot"
                       ? "bg-stone-100 dark:bg-stone-800"
-                      : "ml-auto bg-[#D21F26] text-white"
-                  }`}
+                      : "ml-auto text-white",
+                    m.from !== "bot" && "bg-[#D21F26]"
+                  )}
                 >
                   {m.text}
                   {m.from === "bot" && m.isFallback && (
@@ -153,7 +150,7 @@ export function ChatBot() {
                       href={WHATSAPP}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-2 block text-center rounded-full bg-[#1FA855] px-3 py-1.5 text-xs font-bold text-white"
+                      className="mt-2 block rounded-full bg-[#1FA855] px-3 py-1.5 text-center text-xs font-bold text-white"
                     >
                       {t.chatBot.whatsappUs}
                     </a>
@@ -169,12 +166,13 @@ export function ChatBot() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && send(input)}
                 placeholder={t.chatBot.placeholder}
-                className="flex-1 rounded-full border px-3 py-2 text-sm outline-none focus:border-[#D21F26]"
+                className="flex-1 rounded-full border px-3 py-2 text-sm outline-none focus:border-stone-400"
               />
               <button
                 onClick={() => send(input)}
                 aria-label={t.chatBot.send}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-[#D21F26] text-white"
+                style={{ backgroundColor: color }}
+                className="flex h-10 w-10 items-center justify-center rounded-full text-white"
               >
                 <Send size={16} />
               </button>

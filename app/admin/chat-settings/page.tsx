@@ -1,33 +1,106 @@
 "use client";
 
 /**
- * Chat Settings — bot auto-switch ka control panel.
+ * Chat Settings — do bots ka auto-switch control panel.
  *
- * - Bot Enabled: master switch
- * - Bot Auto Mode: ON = admin online ho to bot khud off, offline ho to on
- * - Status card: abhi bot jawab de raha hai ya admin
+ * HTC Bot (purple): services, interior design, consultation, projects
+ * MTR Bot (blue): products, shopping, orders, delivery
+ *
+ * Har bot ke liye: Enabled (master) + Auto Mode (admin online → bot off).
  */
 import { useState } from "react";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { toast } from "sonner";
 import { Bot, UserCheck, Wifi, WifiOff } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 import { db, isFirebaseConfigured } from "@/lib/firebase/client";
 import { COLLECTIONS } from "@/lib/firebase/collections";
-import { useBotMode } from "@/lib/bot-mode";
+import { useBotMode, isBotActiveForBrand, type ChatBotSettings } from "@/lib/bot-mode";
 import { PageHeader, LoadingState } from "@/components/admin/ui";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useLanguage } from "@/lib/i18n";
+import type { ChatBrand } from "@/lib/types";
+
+function BotSection({
+  brand,
+  settings,
+  adminOnline,
+  saving,
+  onUpdate,
+}: {
+  brand: ChatBrand;
+  settings: ChatBotSettings;
+  adminOnline: boolean;
+  saving: boolean;
+  onUpdate: (brand: ChatBrand, patch: Record<string, unknown>) => void;
+}) {
+  const { t } = useLanguage();
+  const b = settings[brand];
+  const active = isBotActiveForBrand(settings, brand);
+  const isHtc = brand === "htc";
+  const accent = isHtc ? "text-violet-600" : "text-blue-600";
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Bot className={cn("h-5 w-5", accent)} />
+          {isHtc ? t.chatSettings.htcBot : t.chatSettings.mtrBot}
+          <Badge
+            variant={active ? "default" : "secondary"}
+            className="ml-1 px-3 py-1 text-xs"
+          >
+            {active
+              ? t.chatSettings.botAnswering
+              : t.chatSettings.adminAnswering}
+          </Badge>
+        </CardTitle>
+        <p className="text-sm text-muted-foreground">
+          {isHtc ? t.chatSettings.htcBotDesc : t.chatSettings.mtrBotDesc}
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-0.5">
+            <Label>{t.chatSettings.botEnabled}</Label>
+            <p className="text-xs text-muted-foreground">
+              {t.chatSettings.botEnabledDesc}
+            </p>
+          </div>
+          <Switch
+            checked={b.botEnabled}
+            disabled={saving}
+            onCheckedChange={(v) => onUpdate(brand, { botEnabled: v })}
+          />
+        </div>
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-0.5">
+            <Label>{t.chatSettings.autoMode}</Label>
+            <p className="text-xs text-muted-foreground">
+              {t.chatSettings.autoModeDesc}
+            </p>
+          </div>
+          <Switch
+            checked={b.botAutoMode}
+            disabled={saving}
+            onCheckedChange={(v) => onUpdate(brand, { botAutoMode: v })}
+          />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function ChatSettingsPage() {
   const { t } = useLanguage();
-  const { settings, loaded, botActive, adminOnline } = useBotMode();
+  const { settings, loaded, adminOnline } = useBotMode();
   const [saving, setSaving] = useState(false);
 
-  async function update(patch: Record<string, unknown>) {
+  async function update(brand: ChatBrand, patch: Record<string, unknown>) {
     if (!isFirebaseConfigured() || !db) {
       toast.error(t.chatSettings.notConfigured);
       return;
@@ -36,7 +109,7 @@ export default function ChatSettingsPage() {
     try {
       await setDoc(
         doc(db, COLLECTIONS.siteSettings, "chat"),
-        { ...patch, updatedAt: serverTimestamp() },
+        { [brand]: patch, updatedAt: serverTimestamp() },
         { merge: true }
       );
       toast.success(t.chatSettings.saved);
@@ -49,7 +122,10 @@ export default function ChatSettingsPage() {
 
   if (!loaded) return <LoadingState />;
 
-  const s = settings ?? { botEnabled: true, botAutoMode: true };
+  const s: ChatBotSettings = settings ?? {
+    htc: { botEnabled: true, botAutoMode: true },
+    mtr: { botEnabled: true, botAutoMode: true },
+  };
 
   return (
     <div className="space-y-6 p-6">
@@ -58,76 +134,59 @@ export default function ChatSettingsPage() {
         subtitle={t.chatSettings.subtitle}
       />
 
-      {/* Live status */}
+      {/* Admin online status */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            {botActive ? (
-              <Bot className="h-5 w-5 text-violet-600" />
-            ) : (
-              <UserCheck className="h-5 w-5 text-emerald-600" />
-            )}
-            {t.chatSettings.liveStatus}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-wrap items-center gap-3">
-          <Badge
-            variant={botActive ? "default" : "secondary"}
-            className="px-4 py-2 text-sm"
-          >
-            {botActive
-              ? t.chatSettings.botAnswering
-              : t.chatSettings.adminAnswering}
-          </Badge>
-          <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            {adminOnline ? (
-              <>
-                <Wifi className="h-4 w-4 text-emerald-600" />
+        <CardContent className="flex items-center gap-2 pt-6">
+          {adminOnline ? (
+            <>
+              <Wifi className="h-4 w-4 text-emerald-600" />
+              <span className="text-sm font-medium">
                 {t.chatSettings.adminOnline}
-              </>
-            ) : (
-              <>
-                <WifiOff className="h-4 w-4 text-muted-foreground" />
+              </span>
+              <span className="text-xs text-muted-foreground">
+                — {t.chatSettings.adminOnlineHint}
+              </span>
+            </>
+          ) : (
+            <>
+              <WifiOff className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">
                 {t.chatSettings.adminOffline}
-              </>
-            )}
-          </span>
+              </span>
+              <span className="text-xs text-muted-foreground">
+                — {t.chatSettings.adminOfflineHint}
+              </span>
+            </>
+          )}
         </CardContent>
       </Card>
 
-      {/* Toggles */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <BotSection
+          brand="htc"
+          settings={s}
+          adminOnline={adminOnline}
+          saving={saving}
+          onUpdate={update}
+        />
+        <BotSection
+          brand="mtr"
+          settings={s}
+          adminOnline={adminOnline}
+          saving={saving}
+          onUpdate={update}
+        />
+      </div>
+
       <Card>
         <CardHeader>
-          <CardTitle>{t.chatSettings.controls}</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <UserCheck className="h-4 w-4" />
+            {t.chatSettings.howItWorksTitle}
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-5">
-          <div className="flex items-center justify-between gap-4">
-            <div className="space-y-0.5">
-              <Label>{t.chatSettings.botEnabled}</Label>
-              <p className="text-xs text-muted-foreground">
-                {t.chatSettings.botEnabledDesc}
-              </p>
-            </div>
-            <Switch
-              checked={s.botEnabled}
-              disabled={saving}
-              onCheckedChange={(v) => update({ botEnabled: v })}
-            />
-          </div>
-          <div className="flex items-center justify-between gap-4">
-            <div className="space-y-0.5">
-              <Label>{t.chatSettings.autoMode}</Label>
-              <p className="text-xs text-muted-foreground">
-                {t.chatSettings.autoModeDesc}
-              </p>
-            </div>
-            <Switch
-              checked={s.botAutoMode}
-              disabled={saving}
-              onCheckedChange={(v) => update({ botAutoMode: v })}
-            />
-          </div>
-          <p className="rounded-xl bg-muted/60 p-4 text-sm text-muted-foreground">
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
             {t.chatSettings.howItWorks}
           </p>
         </CardContent>
