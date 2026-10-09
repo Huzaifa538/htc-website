@@ -52,6 +52,7 @@ import { ArPreview } from "@/components/customer/ar-preview";
 import { useCartStore } from "@/lib/store/cart";
 import { useWishlistStore } from "@/lib/store/wishlist";
 import { useUiStore } from "@/lib/store/ui";
+import { useChatUiStore } from "@/lib/store/chat-ui";
 import { formatPKR, formatPrice, isPriceUnset } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { uploadFile } from "@/lib/uploads";
@@ -106,6 +107,7 @@ export default function ProductPage({ id: propId }: { id?: string }) {
   const toggleWishlist = useWishlistStore((s) => s.toggle);
   const wished = useWishlistStore((s) => (product ? s.productIds.includes(product.id) : false));
   const openDrawer = useUiStore((s) => s.setCartDrawerOpen);
+  const openChat = useChatUiStore((s) => s.openChat);
 
   const [imgIndex, setImgIndex] = useState(0);
   const [lightbox, setLightbox] = useState(false);
@@ -204,6 +206,23 @@ export default function ProductPage({ id: propId }: { id?: string }) {
     }
   }
 
+  function handleChatAbout() {
+    if (!product || !priceInfo) return;
+    if (!user) {
+      toast.error(t.productCard.signInToChat);
+      router.push(`/login?next=${encodeURIComponent(`/product/${id}`)}`);
+      return;
+    }
+    openChat({
+      kind: "product",
+      id: product.id,
+      name: product.name,
+      image: displayImage,
+      detail: formatPrice(priceInfo.price),
+      href: `/product/${product.slug || product.id}`,
+    });
+    toast.success(t.productCard.chatOpened);
+  }
 
   function pickReviewPhotos(files: FileList | null) {
     if (!files) return;
@@ -534,6 +553,13 @@ export default function ProductPage({ id: propId }: { id?: string }) {
                 className="flex-1 rounded-full bg-[#D21F26] py-6 text-base font-bold hover:bg-[#a8161c]"
               >
                 <Zap size={18} className="mr-2 rtl:ml-2 rtl:mr-0" /> {t.product.buyNow}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleChatAbout}
+                className="flex-1 rounded-full py-6 font-bold"
+              >
+                <MessageCircle size={18} className="mr-2 rtl:ml-2 rtl:mr-0" /> {t.product.chatAboutThis}
               </Button>
             </div>
             )}
