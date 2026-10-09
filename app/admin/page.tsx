@@ -59,6 +59,7 @@ import {
   tsMillis,
 } from "@/components/admin/firebase";
 import SetupWarning from "@/components/admin/SetupWarning";
+import { AiInsights } from "@/components/admin/ai-insights";
 import {
   StatCard,
   StatusBadge,
@@ -671,6 +672,9 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* AI insights — data se smart mashware */}
+      <AiInsights />
 
       {/* quick restock dialog */}
       <Dialog open={restockItem !== null} onOpenChange={(o) => !o && setRestockItem(null)}>
