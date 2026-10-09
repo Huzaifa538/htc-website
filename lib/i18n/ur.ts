@@ -16,6 +16,7 @@ export const ur: Dictionary = {
     gallery: "گیلری",
     about: "ہمارے بارے میں",
     contact: "رابطہ",
+    more: "مزید",
   },
   header: {
     openMenu: "مینیو کھولیں",

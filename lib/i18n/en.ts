@@ -14,6 +14,7 @@ export const en = {
     gallery: "Gallery",
     about: "About",
     contact: "Contact",
+    more: "More",
   },
   header: {
     openMenu: "Open menu",

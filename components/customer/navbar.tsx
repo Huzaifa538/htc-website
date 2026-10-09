@@ -53,12 +53,16 @@ const LINKS = [
   { href: "/", key: "home", icon: Home },
   { href: "/shop", key: "shop", icon: LayoutGrid },
   { href: "/combos", key: "combos", icon: Gift },
+  { href: "/portfolio", key: "portfolio", icon: Images },
+  { href: "/contact", key: "contact", icon: Mail },
+] as const;
+
+// Kam important links — "More" dropdown mein
+const MORE_LINKS = [
   { href: "/services", key: "services", icon: Sparkles },
   { href: "/projects", key: "projects", icon: Package },
-  { href: "/portfolio", key: "portfolio", icon: Images },
   { href: "/gallery", key: "gallery", icon: Search },
   { href: "/about", key: "about", icon: Info },
-  { href: "/contact", key: "contact", icon: Mail },
 ] as const;
 
 const ACCENT = "#D21F26";
@@ -184,8 +188,8 @@ export function Navbar({ announcement }: { announcement?: string }) {
 
             <span className="hidden h-8 w-px bg-black/10 lg:block dark:bg-white/10" />
 
-            {/* Desktop links — animated underline, scrolls if crowded */}
-            <nav className="hidden min-w-0 flex-1 items-center gap-0.5 overflow-x-auto lg:flex [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {/* Desktop links — all visible, compact, no scroll */}
+            <nav className="hidden items-center gap-0 lg:flex">
               {LINKS.map((l) => {
                 const active = pathname === l.href;
                 return (
@@ -193,7 +197,7 @@ export function Navbar({ announcement }: { announcement?: string }) {
                     key={l.href}
                     href={l.href}
                     className={cn(
-                      "relative whitespace-nowrap rounded-full px-3 py-2.5 text-[13px] font-semibold tracking-wide transition-all duration-200",
+                      "relative whitespace-nowrap rounded-full px-4 py-2.5 text-[13px] font-semibold tracking-wide transition-all duration-200",
                       active
                         ? "text-foreground"
                         : "text-foreground/60 hover:bg-black/[0.04] hover:text-foreground dark:hover:bg-white/[0.07]"
@@ -211,6 +215,24 @@ export function Navbar({ announcement }: { announcement?: string }) {
                   </Link>
                 );
               })}
+              {/* More dropdown — kam important links */}
+              <div className="group relative">
+                <button className="relative whitespace-nowrap rounded-full px-2.5 py-2 text-[12px] font-semibold tracking-wide text-foreground/60 transition-all duration-200 hover:bg-black/[0.04] hover:text-foreground dark:hover:bg-white/[0.07]">
+                  {t.nav.more || "More"} ▾
+                </button>
+                <div className="invisible absolute right-0 top-full z-50 w-44 translate-y-1 rounded-2xl border border-black/5 bg-white p-1.5 opacity-0 shadow-xl transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 dark:border-white/10 dark:bg-stone-900">
+                  {MORE_LINKS.map((l) => (
+                    <Link
+                      key={l.href}
+                      href={l.href}
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium text-foreground/70 transition hover:bg-black/[0.04] hover:text-foreground dark:hover:bg-white/[0.07]"
+                    >
+                      <l.icon size={15} className="shrink-0 opacity-60" />
+                      {t.nav[l.key]}
+                    </Link>
+                  ))}
+                </div>
+              </div>
             </nav>
 
             <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
