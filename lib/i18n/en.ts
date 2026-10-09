@@ -470,6 +470,63 @@ export const en = {
       "Signed in, but admin access could not be verified on the server. Please try signing in again.",
     googleFailed: "Google sign-in failed. Please try again.",
   },
+  loyalty: {
+    title: "Loyalty Points",
+    balance: (n: number) => `${n.toLocaleString("en-PK")} points`,
+    earnNote: "Earn 1 point for every Rs 100 you spend. 1 point = Rs 1 off.",
+    usePoints: "Use loyalty points",
+    available: (n: number) => `${n.toLocaleString("en-PK")} points available`,
+    pointsApplied: (n: number, d: number) =>
+      `${n.toLocaleString("en-PK")} points applied — Rs ${d.toLocaleString("en-PK")} off`,
+    signInToEarn: "Sign in to earn loyalty points on this order.",
+    youWillEarn: (n: number) => `You'll earn ${n.toLocaleString("en-PK")} points on this order`,
+    pointsDiscount: "Loyalty discount",
+    yourPoints: "Your points",
+  },
+  installation: {
+    bookTitle: "Book Installation",
+    bookButton: "Book Installation",
+    subtitle: "Our technician will visit and fit it for you.",
+    product: "Product",
+    fullName: "Full name",
+    phone: "Phone",
+    address: "Address",
+    city: "City",
+    preferredDate: "Preferred date",
+    timeSlot: "Time slot",
+    notes: "Notes (optional)",
+    notesPlaceholder: "Floor, gate, any details the technician should know",
+    submit: "Confirm Booking",
+    submitting: "Booking…",
+    success: "Installation booked! We'll call you to confirm the visit.",
+    failed: "Booking failed — please try again.",
+    signInHint: "Tip: sign in so we can link this booking to your account.",
+    slots: ["10:00 AM – 12:00 PM", "12:00 PM – 2:00 PM", "2:00 PM – 4:00 PM", "4:00 PM – 6:00 PM"],
+  },
+  chatBot: {
+    title: "HTC Helper",
+    subtitle: "Ask me anything about the store",
+    hint: "Try one of these:",
+    placeholder: "Type your question…",
+    send: "Send",
+    whatsappUs: "Chat on WhatsApp",
+    quick: ["Delivery time?", "Return policy?", "Payment methods?", "Shop timings?"],
+    fallback: "Sorry, I don't have an answer for that. Our team can help you on WhatsApp:",
+    greeting: "Hello! Welcome to Hammer Trading Company. How can I help you today?",
+    thanks: "You're welcome! Anything else I can help with?",
+    delivery:
+      "We deliver nationwide across Pakistan. Orders above PKR 50,000 get FREE delivery! Standard delivery takes 2-4 working days.",
+    returns:
+      "Easy 7-day return policy. If the product is unused and in original packing, we'll exchange or refund it. Just contact us on WhatsApp.",
+    payment:
+      "We accept Cash on Delivery (COD), bank transfer, JazzCash and Easypaisa. Card payments coming soon.",
+    timings: "Our shop is open Monday to Saturday, 9:00 AM to 9:00 PM. Closed on Sundays.",
+    contact: "You can reach us on WhatsApp: +92 321 2476150. We usually reply within an hour during shop hours.",
+    location:
+      "We're Hammer Trading Company — visit our shop or order online, we deliver all over Pakistan.",
+    price:
+      "Prices are listed on each product page. For bulk orders or special rates, message us on WhatsApp and we'll give you our best price.",
+  },
 };
 
 export type Dictionary = typeof en;

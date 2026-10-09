@@ -72,6 +72,9 @@ export const checkoutOrderSchema = z.object({
   paymentMethod: z.enum(["COD", "BankTransfer", "Card"]),
   couponCode: z.string().trim().min(1).max(40).optional(),
   notes: z.string().trim().max(1000).optional(),
+  // Loyalty points the customer wants to redeem (validated against their
+  // balance server-side; silently clamped, never fails the order).
+  pointsToUse: z.number().int().min(0).max(1000000).optional(),
 });
 
 export type CheckoutOrderInput = z.infer<typeof checkoutOrderSchema>;

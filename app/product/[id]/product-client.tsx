@@ -24,6 +24,7 @@ import {
   ShieldCheck,
   ShoppingCart,
   Truck,
+  Wrench,
   X,
   Zap,
 } from "lucide-react";
@@ -34,7 +35,7 @@ import { COLLECTIONS } from "@/lib/firebase/collections";
 import { useAuth } from "@/components/providers";
 import { useLanguage } from "@/lib/i18n";
 import { SiteShell } from "@/components/customer/site-shell";
-import { ProductCard } from "@/components/customer/product-card";
+import { RelatedProducts } from "@/components/customer/related-products";
 import { Reveal } from "@/components/customer/reveal";
 import { Stars, StarPicker } from "@/components/customer/stars";
 import { EmptyState } from "@/components/customer/skeletons";
@@ -43,8 +44,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { useProduct, useProducts, useReviews } from "@/components/customer/data-hooks";
+import { useProduct, useReviews } from "@/components/customer/data-hooks";
 import { WhatsAppOrderButton } from "@/components/customer/whatsapp-order-button";
+import { InstallationBookingDialog } from "@/components/customer/installation-booking";
 import { useCartStore } from "@/lib/store/cart";
 import { useWishlistStore } from "@/lib/store/wishlist";
 import { useUiStore } from "@/lib/store/ui";
@@ -98,7 +100,6 @@ export default function ProductPage({ id: propId }: { id?: string }) {
   const { user } = useAuth();
   const { t } = useLanguage();
   const { product, loading, configured } = useProduct(id);
-  const { products } = useProducts();
 
   const addLine = useCartStore((s) => s.addLine);
   const toggleWishlist = useWishlistStore((s) => s.toggle);
@@ -114,6 +115,7 @@ export default function ProductPage({ id: propId }: { id?: string }) {
   const [reviewTitle, setReviewTitle] = useState("");
   const [reviewText, setReviewText] = useState("");
   const [reviewBusy, setReviewBusy] = useState(false);
+  const [installOpen, setInstallOpen] = useState(false);
   // Pending review photos (local File objects with preview URLs).
   const [reviewFiles, setReviewFiles] = useState<{ file: File; preview: string }[]>([]);
   const [reviewUploading, setReviewUploading] = useState(false);
@@ -156,13 +158,6 @@ export default function ProductPage({ id: propId }: { id?: string }) {
   }, [product, combination]);
 
   const displayImage = combination?.image ?? gallery[imgIndex] ?? "/logo.png";
-
-  const related = useMemo(() => {
-    if (!product) return [];
-    return products
-      .filter((p) => p.id !== product.id && p.categoryId === product.categoryId)
-      .slice(0, 4);
-  }, [products, product]);
 
   const youtubeUrl = product ? productYoutubeUrl(product) : undefined;
   const embedUrl = youtubeUrl ? youtubeEmbedUrl(youtubeUrl) : null;
@@ -582,6 +577,25 @@ export default function ProductPage({ id: propId }: { id?: string }) {
               </div>
             )}
 
+            {/* Installation booking — technician visits and fits it */}
+            {!isPriceUnset(priceInfo!.price) && (
+              <div className="mt-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setInstallOpen(true)}
+                  className="w-full rounded-full border-amber-300 py-6 font-bold text-amber-700 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-300 dark:hover:bg-amber-950/40"
+                >
+                  <Wrench size={18} className="mr-2 rtl:ml-2 rtl:mr-0" /> {t.installation.bookButton}
+                </Button>
+                <InstallationBookingDialog
+                  open={installOpen}
+                  onOpenChange={setInstallOpen}
+                  productId={product.id}
+                  productName={product.name}
+                />
+              </div>
+            )}
+
             {/* Trust badges */}
             <div className="mt-6 grid grid-cols-3 gap-3 text-center">
               {[
@@ -813,19 +827,8 @@ export default function ProductPage({ id: propId }: { id?: string }) {
           </div>
         </Reveal>
 
-        {/* Related */}
-        {related.length > 0 && (
-          <div className="mt-14">
-            <h2 className="mb-6 font-display text-2xl font-extrabold">
-              {t.product.relatedProducts}
-            </h2>
-            <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-4">
-              {related.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Related — weighted recommendations */}
+        <RelatedProducts product={product} />
       </div>
 
       {/* Lightbox */}

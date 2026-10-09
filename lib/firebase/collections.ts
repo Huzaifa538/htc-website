@@ -33,6 +33,7 @@ export const COLLECTIONS = {
   expenses: "expenses",
   staff: "staff",
   appointments: "appointments",
+  installationBookings: "installationBookings",
 } as const;
 
 export type CollectionName = keyof typeof COLLECTIONS;

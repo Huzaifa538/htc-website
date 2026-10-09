@@ -354,6 +354,8 @@ export interface AppUser {
   phone?: string;
   photoURL?: string;
   addresses: OrderAddress[];
+  /** Loyalty points balance. Rs 100 spent = 1 point, 1 point = Rs 1 off. */
+  loyaltyPoints?: number;
   /** Internal admin notes, e.g. "prefers COD", "wholesale buyer". Never shown to the customer. */
   notes?: string;
   createdAt: Timestamp;
@@ -515,6 +517,30 @@ export interface Appointment {
   serviceType: string;
   notes?: string;
   status: AppointmentStatus;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+/** Hardware installation booking — a technician visits the customer's home/shop. */
+export type InstallationBookingStatus =
+  | "Pending"
+  | "Confirmed"
+  | "Cancelled"
+  | "Completed";
+
+export interface InstallationBooking {
+  id: string;
+  productId: string;
+  productName: string;
+  name: string;
+  phone: string;
+  address: string;
+  city: string;
+  date: string; // YYYY-MM-DD
+  timeSlot: string; // e.g. "10:00 AM – 12:00 PM"
+  notes?: string;
+  userId?: string; // set when the customer is signed in
+  status: InstallationBookingStatus;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

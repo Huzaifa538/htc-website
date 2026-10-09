@@ -46,6 +46,7 @@ import { fetchCollection } from "@/components/customer/data-hooks";
 import { notifyOwnerOrder } from "@/lib/whatsapp";
 import { formatPKR } from "@/lib/format";
 import { useLanguage, type Dictionary } from "@/lib/i18n";
+import { discountForPoints, maxUsablePoints, pointsForAmount } from "@/lib/loyalty";
 import { cn } from "@/lib/utils";
 import type { AppUser, Coupon, OrderAddress, OrderItem, PaymentMethod } from "@/lib/types";
 
@@ -88,6 +89,32 @@ function CheckoutPageContent() {
 
   const [payment, setPayment] = useState<PaymentMethod>("COD");
   const [placing, setPlacing] = useState(false);
+
+  // Loyalty points — balance comes from users/{uid}.
+  const [pointsBalance, setPointsBalance] = useState(0);
+  const [usePoints, setUsePoints] = useState(false);
+
+  useEffect(() => {
+    if (!db || !user) {
+      setPointsBalance(0);
+      return;
+    }
+    getDoc(doc(db, COLLECTIONS.users, user.uid))
+      .then((snap) => {
+        const pts = snap.exists()
+          ? Math.floor((snap.data() as AppUser).loyaltyPoints ?? 0)
+          : 0;
+        setPointsBalance(Math.max(0, pts));
+      })
+      .catch(() => setPointsBalance(0));
+  }, [user]);
+
+  // Points can only discount what's left after the coupon.
+  const usablePoints = maxUsablePoints(Math.max(0, subtotal - discount), pointsBalance);
+  const pointsToUse = usePoints ? usablePoints : 0;
+  const pointsDiscount = discountForPoints(pointsToUse);
+  const totalAfterPoints = Math.max(0, total - pointsDiscount);
+  const willEarn = pointsForAmount(totalAfterPoints);
 
   const {
     register,
@@ -159,6 +186,7 @@ function CheckoutPageContent() {
           address,
           paymentMethod: payment,
           ...(coupon ? { couponCode: coupon.code } : {}),
+          ...(pointsToUse > 0 ? { pointsToUse } : {}),
           ...(data.notes?.trim() ? { notes: data.notes.trim() } : {}),
         }),
       });
@@ -430,6 +458,36 @@ function CheckoutPageContent() {
                     <dd className="font-bold">−{formatPKR(discount)}</dd>
                   </div>
                 )}
+                {/* Loyalty points */}
+                {user && pointsBalance > 0 && (
+                  <div className="rounded-2xl bg-amber-50 p-3 dark:bg-amber-950/40">
+                    <label className="flex cursor-pointer items-center gap-2.5">
+                      <input
+                        type="checkbox"
+                        checked={usePoints}
+                        onChange={(e) => setUsePoints(e.target.checked)}
+                        className="h-4 w-4 accent-[#D21F26]"
+                      />
+                      <span className="text-sm font-semibold">
+                        {t.loyalty.usePoints}
+                      </span>
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        {t.loyalty.available(pointsBalance)}
+                      </span>
+                    </label>
+                    {usePoints && pointsDiscount > 0 && (
+                      <p className="mt-1.5 text-xs font-semibold text-green-700 dark:text-green-400">
+                        {t.loyalty.pointsApplied(pointsToUse, pointsDiscount)}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {pointsDiscount > 0 && (
+                  <div className="flex justify-between text-green-600 dark:text-green-400">
+                    <dt>{t.loyalty.pointsDiscount}</dt>
+                    <dd className="font-bold">−{formatPKR(pointsDiscount)}</dd>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <dt className="text-muted-foreground">Shipping</dt>
                   <dd className="font-bold">
@@ -439,10 +497,15 @@ function CheckoutPageContent() {
                 <div className="flex justify-between border-t pt-3 text-base">
                   <dt className="font-display font-extrabold">Total</dt>
                   <dd className="font-display text-xl font-extrabold text-[#D21F26]">
-                    {formatPKR(total)}
+                    {formatPKR(totalAfterPoints)}
                   </dd>
                 </div>
               </dl>
+              {user && willEarn > 0 && (
+                <p className="mt-2 text-center text-xs font-medium text-amber-700 dark:text-amber-300">
+                  ⭐ {t.loyalty.youWillEarn(willEarn)}
+                </p>
+              )}
               <Button
                 type="submit"
                 disabled={placing}
@@ -453,7 +516,7 @@ function CheckoutPageContent() {
                     <Loader2 size={18} className="mr-2 animate-spin" /> Placing order…
                   </>
                 ) : (
-                  <>Place Order · {formatPKR(total)}</>
+                  <>Place Order · {formatPKR(totalAfterPoints)}</>
                 )}
               </Button>
               <p className="mt-3 text-center text-xs text-muted-foreground">

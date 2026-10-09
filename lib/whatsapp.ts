@@ -65,7 +65,6 @@ export async function notifyOwnerOrder(
 }
 
 /* ---------------- HTC appointment alerts ---------------- */
-
 export interface AppointmentAlertInput {
   name: string;
   phone: string;
@@ -96,6 +95,49 @@ export async function notifyOwnerAppointment(
       body: JSON.stringify({
         message: buildAppointmentMessage(a),
         title: "HTC: New appointment — WhatsApp not configured",
+        type: "system",
+      }),
+    });
+    const data = (await res.json()) as { sent?: boolean; reason?: string };
+    return { sent: data.sent === true, reason: data.reason };
+  } catch {
+    return { sent: false, reason: "network-error" };
+  }
+}
+
+/* ---------------- Installation booking alerts ---------------- */
+
+export interface InstallationAlertInput {
+  productName: string;
+  name: string;
+  phone: string;
+  city: string;
+  date: string; // YYYY-MM-DD
+  timeSlot: string;
+}
+
+/** "🔧 Installation booking: Door Lock X, Ahmed 03001234567, Lahore, 2026-10-12 10:00 AM – 12:00 PM" */
+export function buildInstallationMessage(i: InstallationAlertInput): string {
+  return (
+    `🔧 Installation booking: ${i.productName}, ${i.name} ${i.phone}, ` +
+    `${i.city}, ${i.date} ${i.timeSlot}`
+  );
+}
+
+/**
+ * POST the installation alert to the WhatsApp notify route. Never throws —
+ * same fire-and-forget pattern as order alerts.
+ */
+export async function notifyOwnerInstallation(
+  i: InstallationAlertInput
+): Promise<NotifyResult> {
+  try {
+    const res = await fetch("/api/notify/whatsapp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: buildInstallationMessage(i),
+        title: "MTR Store: New installation booking — WhatsApp not configured",
         type: "system",
       }),
     });

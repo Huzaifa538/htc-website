@@ -25,6 +25,11 @@ import {
   cartShipping,
   cartSubtotal,
 } from "@/lib/cart-totals";
+import {
+  discountForPoints,
+  maxUsablePoints,
+  pointsForAmount,
+} from "@/lib/loyalty";
 import { getProductPrice } from "@/components/customer/product-utils";
 import { tooManyRequests } from "@/lib/rate-limit";
 import type {
@@ -136,6 +141,25 @@ export async function POST(req: NextRequest) {
     }
     const discount = cartDiscount(subtotal, coupon);
 
+    // Loyalty points: redeem against the post-coupon amount. The request is
+    // clamped to the customer's real balance — never fails the order.
+    let pointsUsed = 0;
+    let pointsDiscount = 0;
+    const userRef = adminDb.collection(COLLECTIONS.users).doc(uid);
+    try {
+      const userSnap = await userRef.get();
+      const balance = Math.floor(
+        (userSnap.data() as { loyaltyPoints?: number } | undefined)
+          ?.loyaltyPoints ?? 0
+      );
+      const afterCoupon = Math.max(0, subtotal - discount);
+      const usable = maxUsablePoints(afterCoupon, balance);
+      pointsUsed = Math.min(Math.floor(input.pointsToUse ?? 0), usable);
+      pointsDiscount = discountForPoints(pointsUsed);
+    } catch {
+      /* no points — order continues normally */
+    }
+
     // Shipping from live site settings.
     let threshold = DEFAULT_FREE_SHIPPING_THRESHOLD;
     try {
@@ -151,7 +175,7 @@ export async function POST(req: NextRequest) {
       /* fall back to the default threshold */
     }
     const shipping = cartShipping(lines.length, subtotal, discount, threshold);
-    const total = Math.max(0, subtotal - discount + shipping);
+    const total = Math.max(0, subtotal - discount - pointsDiscount + shipping);
 
     const address: OrderAddress = {
       name: input.address.name,
@@ -166,6 +190,9 @@ export async function POST(req: NextRequest) {
       items: priced.map((p) => p.item),
       subtotal,
       discount,
+      ...(pointsUsed > 0
+        ? { pointsUsed, pointsDiscount }
+        : {}),
       shipping,
       tax: 0,
       total,
@@ -177,6 +204,27 @@ export async function POST(req: NextRequest) {
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     });
+
+    // Loyalty ledger: deduct redeemed points, award points on the amount
+    // actually paid. Best-effort — a failure here never fails the order.
+    try {
+      const earned = pointsForAmount(total);
+      const delta = earned - pointsUsed;
+      if (delta !== 0) {
+        await userRef.set(
+          {
+            loyaltyPoints: FieldValue.increment(delta),
+            updatedAt: FieldValue.serverTimestamp(),
+          },
+          { merge: true }
+        );
+      }
+      if (earned > 0) {
+        await ref.update({ loyaltyPointsEarned: earned });
+      }
+    } catch {
+      /* non-fatal */
+    }
 
     return NextResponse.json({ ok: true, id: ref.id, total });
   } catch (e) {

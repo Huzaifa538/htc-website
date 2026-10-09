@@ -121,6 +121,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/admin/combos", label: "Combo Deals", icon: Gift },
       { href: "/admin/courier", label: "Courier", icon: Truck },
       { href: "/admin/customers", label: "Customers", icon: Users },
+      { href: "/admin/installations", label: "Installations", icon: Wrench },
       { href: "/admin/mtr/messages", label: "MTR Messages", icon: MessageSquare },
     ],
   },
