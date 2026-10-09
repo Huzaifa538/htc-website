@@ -184,8 +184,8 @@ export function Navbar({ announcement }: { announcement?: string }) {
 
             <span className="hidden h-8 w-px bg-black/10 lg:block dark:bg-white/10" />
 
-            {/* Desktop links — animated underline */}
-            <nav className="hidden items-center gap-1 lg:flex">
+            {/* Desktop links — animated underline, scrolls if crowded */}
+            <nav className="hidden min-w-0 flex-1 items-center gap-0.5 overflow-x-auto lg:flex [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {LINKS.map((l) => {
                 const active = pathname === l.href;
                 return (
@@ -193,7 +193,7 @@ export function Navbar({ announcement }: { announcement?: string }) {
                     key={l.href}
                     href={l.href}
                     className={cn(
-                      "relative rounded-full px-4 py-2.5 text-[13px] font-semibold tracking-wide transition-all duration-200",
+                      "relative whitespace-nowrap rounded-full px-3 py-2.5 text-[13px] font-semibold tracking-wide transition-all duration-200",
                       active
                         ? "text-foreground"
                         : "text-foreground/60 hover:bg-black/[0.04] hover:text-foreground dark:hover:bg-white/[0.07]"
