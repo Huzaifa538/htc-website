@@ -22,7 +22,14 @@ export function SearchBar({ compact = false }: { compact?: boolean }) {
   const [open, setOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
   const [listening, setListening] = useState(false);
+  const [voiceSupported, setVoiceSupported] = useState(false);
   const recogRef = useRef<{ stop: () => void } | null>(null);
+
+  // Check voice support on mount — mic button sirf tab dikhao jab support ho
+  useEffect(() => {
+    const w = window as unknown as Record<string, unknown>;
+    setVoiceSupported(!!(w.SpeechRecognition || w.webkitSpeechRecognition));
+  }, []);
 
   // Voice search — Web Speech API (Chrome/Edge). Mic dabao, bolo, product dhoondo.
   function toggleVoice() {
@@ -150,18 +157,20 @@ export function SearchBar({ compact = false }: { compact?: boolean }) {
           }
           aria-label={t.header.search}
         />
-        <button
-          onClick={toggleVoice}
-          aria-label={t.search.voiceSearch}
-          title={t.search.voiceSearch}
-          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition ${
-            listening
-              ? "animate-pulse bg-[#D21F26] text-white"
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
-          }`}
-        >
-          {listening ? <MicOff size={15} /> : <Mic size={15} />}
-        </button>
+        {voiceSupported && (
+          <button
+            onClick={toggleVoice}
+            aria-label={t.search.voiceSearch}
+            title={t.search.voiceSearch}
+            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition ${
+              listening
+                ? "animate-pulse bg-[#D21F26] text-white"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            }`}
+          >
+            {listening ? <MicOff size={15} /> : <Mic size={15} />}
+          </button>
+        )}
         <button
           onClick={submit}
           aria-label={t.header.search}
