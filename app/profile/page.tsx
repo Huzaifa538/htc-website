@@ -4,7 +4,7 @@
  */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -18,6 +18,7 @@ import {
   setDoc,
 } from "firebase/firestore";
 import {
+  Camera,
   Heart,
   Loader2,
   LogOut,
@@ -26,10 +27,12 @@ import {
   Pencil,
   Plus,
   Trash2,
-  User,
+
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { updateProfile } from "firebase/auth";
+import { uploadImage } from "@/lib/uploads";
 import { db, isFirebaseConfigured } from "@/lib/firebase/client";
 import { COLLECTIONS } from "@/lib/firebase/collections";
 import { useAuth } from "@/components/providers";
@@ -75,6 +78,8 @@ export default function ProfilePage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -156,6 +161,45 @@ export default function ProfilePage() {
     }
   }
 
+  // Avatar upload — user apni photo laga sakta hai
+  async function onAvatarPick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please choose an image file");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be under 5 MB");
+      return;
+    }
+    setUploadingAvatar(true);
+    try {
+      const idToken = await user.getIdToken();
+      const url = await uploadImage(file, { idToken });
+      await updateProfile(user, { photoURL: url });
+      // Firestore user doc bhi update karo
+      if (db) {
+        await setDoc(
+          doc(db, COLLECTIONS.users, user.uid),
+          { photoURL: url, updatedAt: serverTimestamp() },
+          { merge: true }
+        );
+      }
+      toast.success("Profile photo updated!");
+      // Page refresh taake nayi photo dikhe
+      window.location.reload();
+    } catch {
+      toast.error("Could not upload photo. Try again.");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
+
+  // Naam ka pehla harf — khubsurat default avatar
+  const initial = (user?.displayName ?? user?.email ?? "C").trim().charAt(0).toUpperCase();
+
   if (authLoading) {
     return (
       <SiteShell>
@@ -186,19 +230,43 @@ export default function ProfilePage() {
       <div className="container max-w-4xl py-10">
         <Reveal>
           <div className="flex flex-wrap items-center gap-5 rounded-3xl bg-[#FBF3E4] p-6 sm:p-8 dark:bg-stone-900/60">
-            {user.photoURL ? (
-              <Image
-                src={user.photoURL}
-                alt=""
-                width={72}
-                height={72}
-                className="h-[72px] w-[72px] rounded-full object-cover"
+            {/* Avatar — photo ya naam ke harf wala khubsurat circle */}
+            <div className="relative shrink-0">
+              {user.photoURL ? (
+                <Image
+                  src={user.photoURL}
+                  alt=""
+                  width={72}
+                  height={72}
+                  className="h-[72px] w-[72px] rounded-full object-cover ring-2 ring-[#D21F26]/20"
+                />
+              ) : (
+                <span className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-gradient-to-br from-[#D21F26] to-[#8B0000] text-3xl font-extrabold text-white shadow-lg">
+                  {initial}
+                </span>
+              )}
+              {/* Upload button */}
+              <button
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={uploadingAvatar}
+                aria-label="Change profile photo"
+                title="Change profile photo"
+                className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-[#D21F26] text-white shadow-md transition hover:bg-[#a8161c] disabled:opacity-50"
+              >
+                {uploadingAvatar ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Camera size={14} />
+                )}
+              </button>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={onAvatarPick}
               />
-            ) : (
-              <span className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[#D21F26]/15 text-[#D21F26]">
-                <User size={32} />
-              </span>
-            )}
+            </div>
             <div className="min-w-0 flex-1">
               <h1 className="truncate font-display text-2xl font-extrabold">
                 {user.displayName ?? "Customer"}
