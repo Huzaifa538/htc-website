@@ -1,7 +1,7 @@
 /**
  * POST /api/chat/messages — send a customer chat message.
  *
- * Body: { idToken, userId, text?, imageUrl?, brand, refCard? }
+ * Body: { idToken, userId, text?, imageUrl?, audioUrl?, brand, refCard? }
  *
  * The caller's ID token must belong to `userId` (403 otherwise) — a
  * customer can only write to their own chat thread. The message and the
@@ -105,6 +105,7 @@ export async function POST(req: NextRequest) {
       sender: "user",
       text: input.text,
       ...(input.imageUrl ? { imageUrl: input.imageUrl } : {}),
+      ...(input.audioUrl ? { audioUrl: input.audioUrl } : {}),
       ...(input.refCard ? { refCard: input.refCard } : {}),
       brand: input.brand,
       read: false,

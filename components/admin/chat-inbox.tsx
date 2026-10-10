@@ -306,6 +306,14 @@ export function ChatInbox({
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={m.imageUrl} alt="attachment" className="mb-1 max-h-56 rounded-lg object-cover" />
                   )}
+                  {(m as { audioUrl?: string }).audioUrl && (
+                    <audio
+                      controls
+                      src={(m as { audioUrl?: string }).audioUrl}
+                      className="mb-1 w-48 max-w-full"
+                      preload="metadata"
+                    />
+                  )}
                   {m.text && <p className="whitespace-pre-wrap break-words">{m.text}</p>}
                   <p
                     className={cn(

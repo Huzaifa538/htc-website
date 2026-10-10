@@ -157,16 +157,17 @@ export const chatMessageSchema = z
     userId: z.string().trim().min(1, "userId is required").max(100),
     text: z.string().trim().max(2000, "Message is too long"),
     imageUrl: z.string().trim().url("Invalid image URL").max(2000).optional(),
+    audioUrl: z.string().trim().url("Invalid audio URL").max(2000).optional(),
     brand: z.enum(["mtr", "htc"]),
     refCard: chatRefCardSchema.optional(),
   })
   .superRefine((v, ctx) => {
-    // A message needs either text or an image — never a completely empty doc.
-    if (!v.text && !v.imageUrl) {
+    // A message needs either text, an image, or audio — never a completely empty doc.
+    if (!v.text && !v.imageUrl && !v.audioUrl) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["text"],
-        message: "Message text or an image is required",
+        message: "Message text, an image, or audio is required",
       });
     }
   });

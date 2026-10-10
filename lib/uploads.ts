@@ -95,3 +95,8 @@ export function uploadImage(file: File, opts?: { idToken?: string }): Promise<st
 export function uploadVideo(file: File, opts?: { idToken?: string }): Promise<string> {
   return uploadFile(file, { resourceType: "video", folder: "videos", idToken: opts?.idToken });
 }
+
+/** Upload a voice message audio file; resolves with the public URL. */
+export function uploadAudio(file: File, opts?: { idToken?: string }): Promise<string> {
+  return uploadFile(file, { resourceType: "auto", folder: "voice", idToken: opts?.idToken });
+}

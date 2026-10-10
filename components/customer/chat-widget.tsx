@@ -28,6 +28,7 @@ import {
   ImagePlus,
   Loader2,
   MessageCircle,
+  Mic,
   Package,
   Send,
   X,
@@ -37,6 +38,7 @@ import { toast } from "sonner";
 import { db, isFirebaseConfigured } from "@/lib/firebase/client";
 import {
   uploadImage,
+  uploadAudio,
   isUploadsConfigured,
 } from "@/lib/uploads";
 import { COLLECTIONS } from "@/lib/firebase/collections";
@@ -82,7 +84,7 @@ function RefCard({ card }: { card: ChatRefCard }) {
 
 export function ChatWidget() {
   const { user, loading } = useAuth();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
   const { open, refCard, openChat, closeChat, clearRefCard, setUnread } =
@@ -96,9 +98,14 @@ export function ChatWidget() {
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const configured = isFirebaseConfigured();
 
@@ -166,9 +173,9 @@ export function ChatWidget() {
     typingTimer.current = setTimeout(() => setTyping(null), 2500);
   }
 
-  async function sendMessage(imageUrl?: string) {
+  async function sendMessage(imageUrl?: string, audioUrl?: string) {
     const body = text.trim();
-    if ((!body && !imageUrl) || !db || !uid || sending) return;
+    if ((!body && !imageUrl && !audioUrl) || !db || !uid || sending) return;
     if (!requireLogin()) return;
     setSending(true);
     try {
@@ -189,6 +196,7 @@ export function ChatWidget() {
           userId: uid,
           text: body,
           ...(imageUrl ? { imageUrl } : {}),
+          ...(audioUrl ? { audioUrl } : {}),
           brand,
           ...(card
             ? {
@@ -237,6 +245,88 @@ export function ChatWidget() {
       toast.error(t.chat.uploadFailed);
     } finally {
       setUploading(false);
+    }
+  }
+
+  // Voice message recording — MediaRecorder, WhatsApp style
+  async function startRecording() {
+    if (!requireLogin()) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((tr) => tr.stop());
+        if (recordingTimerRef.current) {
+          clearInterval(recordingTimerRef.current);
+          recordingTimerRef.current = null;
+        }
+        const blob = new Blob(audioChunksRef.current, { type: recorder.mimeType || "audio/webm" });
+        // 1 second se kam ki recording discard karo
+        if (blob.size < 1000) {
+          setRecording(false);
+          setRecordingTime(0);
+          return;
+        }
+        await sendVoiceMessage(blob);
+      };
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setRecording(true);
+      setRecordingTime(0);
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingTime((t) => {
+          // 2 minute max
+          if (t >= 120) {
+            stopRecording();
+            return t;
+          }
+          return t + 1;
+        });
+      }, 1000);
+    } catch {
+      toast.error(
+        lang === "ur" ? "مائیک کی اجازت دیں" : "Please allow microphone access"
+      );
+    }
+  }
+
+  function stopRecording() {
+    mediaRecorderRef.current?.stop();
+    setRecording(false);
+  }
+
+  function cancelRecording() {
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+    mediaRecorderRef.current?.stream?.getTracks().forEach((tr) => tr.stop());
+    // onstop ko trigger hone se roko — discard
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.onstop = null;
+    }
+    setRecording(false);
+    setRecordingTime(0);
+    audioChunksRef.current = [];
+  }
+
+  async function sendVoiceMessage(blob: Blob) {
+    if (!db || !uid) return;
+    setUploading(true);
+    try {
+      const idToken = await user.getIdToken();
+      const file = new File([blob], `voice-${Date.now()}.webm`, { type: blob.type });
+      const url = await uploadAudio(file, { idToken });
+      await sendMessage(undefined, url);
+    } catch {
+      toast.error(t.chat.uploadFailed);
+    } finally {
+      setUploading(false);
+      setRecordingTime(0);
     }
   }
 
@@ -366,6 +456,14 @@ export function ChatWidget() {
                           </span>
                         </a>
                       )}
+                      {(m as { audioUrl?: string }).audioUrl && (
+                        <audio
+                          controls
+                          src={(m as { audioUrl?: string }).audioUrl}
+                          className="mb-1.5 w-48 max-w-full"
+                          preload="metadata"
+                        />
+                      )}
                       {m.text && (
                         <p className="whitespace-pre-wrap break-words">{m.text}</p>
                       )}
@@ -466,7 +564,7 @@ export function ChatWidget() {
               {isUploadsConfigured() && (
                 <button
                   onClick={() => fileRef.current?.click()}
-                  disabled={uploading || loading}
+                  disabled={uploading || loading || recording}
                   aria-label="Send image"
                   title="Send image"
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full hover:bg-muted disabled:opacity-50"
@@ -477,6 +575,40 @@ export function ChatWidget() {
                     <ImagePlus size={18} />
                   )}
                 </button>
+              )}
+              {/* Voice message — dabao, bolo, bhejo */}
+              {isUploadsConfigured() && !recording && (
+                <button
+                  onClick={startRecording}
+                  disabled={uploading || loading}
+                  aria-label={lang === "ur" ? "وائس میسج بھیجیں" : "Send voice message"}
+                  title={lang === "ur" ? "وائس میسج" : "Voice message"}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full hover:bg-muted disabled:opacity-50"
+                >
+                  <Mic size={18} />
+                </button>
+              )}
+              {recording && (
+                <div className="flex shrink-0 items-center gap-2 rounded-full bg-red-50 px-3 py-2 dark:bg-red-950/30">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-red-600" />
+                  <span className="text-xs font-medium tabular-nums text-red-700 dark:text-red-300">
+                    {Math.floor(recordingTime / 60)}:{String(recordingTime % 60).padStart(2, "0")}
+                  </span>
+                  <button
+                    onClick={cancelRecording}
+                    aria-label={lang === "ur" ? "منسوخ کریں" : "Cancel"}
+                    className="flex h-6 w-6 items-center justify-center rounded-full text-red-600 hover:bg-red-100 dark:hover:bg-red-900/50"
+                  >
+                    <X size={14} />
+                  </button>
+                  <button
+                    onClick={stopRecording}
+                    aria-label={lang === "ur" ? "بھیجیں" : "Send"}
+                    className="flex h-7 w-7 items-center justify-center rounded-full bg-red-600 text-white hover:bg-red-700"
+                  >
+                    <Send size={13} />
+                  </button>
+                </div>
               )}
               <input
                 value={text}
