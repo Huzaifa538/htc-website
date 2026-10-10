@@ -28,13 +28,11 @@ import type { ChatBrand } from "@/lib/types";
 function BotSection({
   brand,
   settings,
-  adminOnline,
   saving,
   onUpdate,
 }: {
   brand: ChatBrand;
   settings: ChatBotSettings;
-  adminOnline: boolean;
   saving: boolean;
   onUpdate: (brand: ChatBrand, patch: Record<string, unknown>) => void;
 }) {
@@ -165,14 +163,12 @@ export default function ChatSettingsPage() {
         <BotSection
           brand="htc"
           settings={s}
-          adminOnline={adminOnline}
           saving={saving}
           onUpdate={update}
         />
         <BotSection
           brand="mtr"
           settings={s}
-          adminOnline={adminOnline}
           saving={saving}
           onUpdate={update}
         />

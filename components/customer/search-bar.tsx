@@ -12,10 +12,11 @@ import { formatPKR } from "@/lib/format";
 import { getProductPrice, primaryImage } from "@/components/customer/product-utils";
 import { useProducts } from "@/components/customer/data-hooks";
 import { useLanguage } from "@/lib/i18n";
+import { toast } from "sonner";
 
 export function SearchBar({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { products } = useProducts();
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
@@ -36,13 +37,18 @@ export function SearchBar({ compact = false }: { compact?: boolean }) {
           interimResults: boolean;
           onresult: ((e: { results?: Array<Array<{ transcript?: string }>> }) => void) | null;
           onend: (() => void) | null;
-          onerror: (() => void) | null;
+          onerror: ((ev: { error?: string }) => void) | null;
           start: () => void;
           stop: () => void;
         })
       | undefined;
     if (!SR) {
       // Browser support nahi karta — user type karke dhoonde
+      toast.error(
+        lang === "ur"
+          ? "آپ کا براؤزر وائس سرچ سپورٹ نہیں کرتا"
+          : "Your browser doesn't support voice search"
+      );
       return;
     }
     const recog = new SR();
@@ -57,7 +63,17 @@ export function SearchBar({ compact = false }: { compact?: boolean }) {
       }
     };
     recog.onend = () => setListening(false);
-    recog.onerror = () => setListening(false);
+    recog.onerror = (ev) => {
+      setListening(false);
+      // Mic permission denied ya koi error
+      if (ev?.error === "not-allowed" || ev?.error === "service-not-allowed") {
+        toast.error(
+          lang === "ur"
+            ? "مائیک کی اجازت دیں — براؤزر سیٹنگز میں اجازت دیں"
+            : "Please allow microphone access in your browser settings"
+        );
+      }
+    };
     try {
       recog.start();
       setListening(true);
