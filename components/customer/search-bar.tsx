@@ -45,6 +45,7 @@ export function SearchBar({ compact = false }: { compact?: boolean }) {
           onresult: ((e: { results?: Array<Array<{ transcript?: string }>> }) => void) | null;
           onend: (() => void) | null;
           onerror: ((ev: { error?: string }) => void) | null;
+          onstart: (() => void) | null;
           start: () => void;
           stop: () => void;
         })
@@ -62,7 +63,14 @@ export function SearchBar({ compact = false }: { compact?: boolean }) {
     recogRef.current = recog;
     recog.lang = lang === "ur" ? "ur-PK" : "en-PK"; // Urdu + English dono sunta hai
     recog.interimResults = true; // bolte waqt live dikhe
+    let started = false;
+    let gotResult = false;
+    recog.onstart = () => {
+      started = true;
+      setListening(true);
+    };
     recog.onresult = (e) => {
+      gotResult = true;
       // interim + final dono results se text nikalo
       let text = "";
       const results = e.results;
@@ -78,7 +86,24 @@ export function SearchBar({ compact = false }: { compact?: boolean }) {
         setOpen(true);
       }
     };
-    recog.onend = () => setListening(false);
+    recog.onend = () => {
+      setListening(false);
+      // Agar start hua hi nahi ya foran band ho gaya — asal masla batao
+      if (!started) {
+        toast.error(
+          lang === "ur"
+            ? "وائس شروع نہیں ہو سکی — Chrome دوبارہ کھولیں"
+            : "Voice failed to start — reopen Chrome and try again"
+        );
+      } else if (!gotResult) {
+        // Start hua lekin kuch suna nahi — no-speech error se pehle hi end ho gaya
+        toast.error(
+          lang === "ur"
+            ? "کچھ سنائی نہیں دیا — قریب ہو کر زور سے بولیں"
+            : "Didn't catch that — speak louder and closer"
+        );
+      }
+    };
     recog.onerror = (ev) => {
       setListening(false);
       const err = ev?.error;
@@ -111,9 +136,12 @@ export function SearchBar({ compact = false }: { compact?: boolean }) {
     };
     try {
       recog.start();
-      setListening(true);
+      // onstart fire hoga to listening true hoga — optimistic set nahi karte
     } catch {
       setListening(false);
+      toast.error(
+        lang === "ur" ? "وائس شروع نہیں ہو سکی" : "Voice failed to start"
+      );
     }
   }
 
