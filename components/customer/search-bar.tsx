@@ -82,6 +82,8 @@ export function SearchBar({ compact = false }: { compact?: boolean }) {
         }
       }
       text = text.trim();
+      // Speech API jumle ke end mein "." ya "?" lagata hai — search ke liye hatao
+      text = text.replace(/[.?!,;:\u06d4\u061f]+$/, "").trim();
       if (text) {
         setQ(text);
         setOpen(true);
