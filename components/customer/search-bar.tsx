@@ -61,7 +61,8 @@ export function SearchBar({ compact = false }: { compact?: boolean }) {
     }
     const recog = new SR();
     recogRef.current = recog;
-    recog.lang = lang === "ur" ? "ur-PK" : "en-PK"; // Urdu + English dono sunta hai
+    // en-US sab se reliable hai — ur-PK/en-PK kabhi kabhi server se connect nahi hota
+    recog.lang = "en-US";
     recog.interimResults = true; // bolte waqt live dikhe
     let started = false;
     let gotResult = false;
