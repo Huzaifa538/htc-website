@@ -17,6 +17,7 @@ import { Stars } from "@/components/customer/stars";
 import { useLanguage } from "@/lib/i18n";
 import { useCategories, useProducts } from "@/components/customer/data-hooks";
 import { getProductPrice, tsMillis } from "@/components/customer/product-utils";
+import { fuzzySearch } from "@/lib/search/fuzzy";
 import { formatPKR } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -146,10 +147,26 @@ function ShopClient() {
   );
 
   const filtered = useMemo(() => {
-    const needle = search.trim().toLowerCase();
+    const needle = search.trim();
+    // Fuzzy search — pehle text match nikalo (galat spelling bhi chalegi)
+    let searchIds: Set<string> | null = null;
+    if (needle.length >= 2) {
+      const matches = fuzzySearch(
+        needle,
+        products.map((p) => ({
+          id: p.id,
+          name: p.name,
+          urduName: (p as { urduName?: string }).urduName,
+          tags: p.tags ?? [],
+          categoryName: (p as { categoryName?: string }).categoryName,
+        })),
+        products.length
+      );
+      searchIds = new Set(matches.map((m) => m.id));
+    }
     let list = products.filter((p) => {
       if (selectedCats.length > 0 && !expandedCats.has(p.categoryId)) return false;
-      if (needle && !p.name.toLowerCase().includes(needle) && !(p.tags ?? []).some((t) => t.toLowerCase().includes(needle))) return false;
+      if (searchIds && !searchIds.has(p.id)) return false;
       const price = getProductPrice(p).price;
       if (minPrice && price < Number(minPrice)) return false;
       if (maxPrice && price > Number(maxPrice)) return false;

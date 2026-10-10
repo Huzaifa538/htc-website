@@ -13,6 +13,7 @@ import { getProductPrice, primaryImage } from "@/components/customer/product-uti
 import { useProducts } from "@/components/customer/data-hooks";
 import { useLanguage } from "@/lib/i18n";
 import { toast } from "sonner";
+import { fuzzySearch } from "@/lib/search/fuzzy";
 
 export function SearchBar({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
@@ -159,11 +160,21 @@ export function SearchBar({ compact = false }: { compact?: boolean }) {
   }, []);
 
   const suggestions = useMemo(() => {
-    const needle = q.trim().toLowerCase();
+    const needle = q.trim();
     if (needle.length < 2) return [];
-    return products
-      .filter((p) => p.name.toLowerCase().includes(needle))
-      .slice(0, 6);
+    // Fuzzy search — galat spelling par bhi sahi product mile
+    return fuzzySearch(
+      needle,
+      products.map((p) => ({
+        id: p.id,
+        name: p.name,
+        urduName: (p as { urduName?: string }).urduName,
+        tags: p.tags ?? [],
+        categoryName: (p as { categoryName?: string }).categoryName,
+        _orig: p,
+      })),
+      6
+    ).map((r) => (r as unknown as { _orig: (typeof products)[number] })._orig);
   }, [q, products]);
 
   useEffect(() => {
