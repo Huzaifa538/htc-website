@@ -81,12 +81,31 @@ export function SearchBar({ compact = false }: { compact?: boolean }) {
     recog.onend = () => setListening(false);
     recog.onerror = (ev) => {
       setListening(false);
-      // Mic permission denied ya koi error
-      if (ev?.error === "not-allowed" || ev?.error === "service-not-allowed") {
+      const err = ev?.error;
+      // Mic permission denied
+      if (err === "not-allowed" || err === "service-not-allowed") {
         toast.error(
           lang === "ur"
             ? "مائیک کی اجازت دیں — براؤزر سیٹنگز میں اجازت دیں"
             : "Please allow microphone access in your browser settings"
+        );
+      } else if (err === "no-speech") {
+        toast.error(
+          lang === "ur"
+            ? "کچھ سنائی نہیں دیا — دوبارہ بولیں"
+            : "Didn't hear anything — please speak again"
+        );
+      } else if (err === "network") {
+        toast.error(
+          lang === "ur"
+            ? "انٹرنیٹ کا مسئلہ ہے — کنکشن چیک کریں"
+            : "Network issue — check your connection"
+        );
+      } else if (err === "audio-capture") {
+        toast.error(
+          lang === "ur"
+            ? "مائیک نہیں مل رہا — ڈیوائس چیک کریں"
+            : "Microphone not found — check your device"
         );
       }
     };
