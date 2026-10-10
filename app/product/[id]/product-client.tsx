@@ -25,7 +25,7 @@ import {
   ShieldCheck,
   ShoppingCart,
   Truck,
-  Wrench,
+
   X,
   Zap,
 } from "lucide-react";
@@ -47,7 +47,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useProduct, useReviews } from "@/components/customer/data-hooks";
 import { WhatsAppOrderButton } from "@/components/customer/whatsapp-order-button";
-import { InstallationBookingDialog } from "@/components/customer/installation-booking";
 import { ArPreview } from "@/components/customer/ar-preview";
 import { useCartStore } from "@/lib/store/cart";
 import { useWishlistStore } from "@/lib/store/wishlist";
@@ -117,7 +116,6 @@ export default function ProductPage({ id: propId }: { id?: string }) {
   const [reviewTitle, setReviewTitle] = useState("");
   const [reviewText, setReviewText] = useState("");
   const [reviewBusy, setReviewBusy] = useState(false);
-  const [installOpen, setInstallOpen] = useState(false);
   const [arOpen, setArOpen] = useState(false);
   // Pending review photos (local File objects with preview URLs).
   const [reviewFiles, setReviewFiles] = useState<{ file: File; preview: string }[]>([]);
@@ -576,25 +574,6 @@ export default function ProductPage({ id: propId }: { id?: string }) {
                       : `/product/${product.slug || product.id}`
                   }
                   quantity={qty}
-                />
-              </div>
-            )}
-
-            {/* Installation booking — technician visits and fits it */}
-            {!isPriceUnset(priceInfo!.price) && (
-              <div className="mt-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setInstallOpen(true)}
-                  className="w-full rounded-full border-amber-300 py-6 font-bold text-amber-700 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-300 dark:hover:bg-amber-950/40"
-                >
-                  <Wrench size={18} className="mr-2 rtl:ml-2 rtl:mr-0" /> {t.installation.bookButton}
-                </Button>
-                <InstallationBookingDialog
-                  open={installOpen}
-                  onOpenChange={setInstallOpen}
-                  productId={product.id}
-                  productName={product.name}
                 />
               </div>
             )}

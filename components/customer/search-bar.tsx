@@ -53,12 +53,21 @@ export function SearchBar({ compact = false }: { compact?: boolean }) {
     }
     const recog = new SR();
     recogRef.current = recog;
-    recog.lang = "ur-PK"; // Urdu + English dono sunta hai
-    recog.interimResults = false;
+    recog.lang = lang === "ur" ? "ur-PK" : "en-PK"; // Urdu + English dono sunta hai
+    recog.interimResults = true; // bolte waqt live dikhe
     recog.onresult = (e) => {
-      const text = e.results?.[0]?.[0]?.transcript ?? "";
-      if (text.trim()) {
-        setQ(text.trim());
+      // interim + final dono results se text nikalo
+      let text = "";
+      const results = e.results;
+      if (results) {
+        for (let i = 0; i < results.length; i++) {
+          const r = results[i]?.[0]?.transcript;
+          if (r) text += r + " ";
+        }
+      }
+      text = text.trim();
+      if (text) {
+        setQ(text);
         setOpen(true);
       }
     };
@@ -127,7 +136,13 @@ export function SearchBar({ compact = false }: { compact?: boolean }) {
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={(e) => e.key === "Enter" && submit()}
-          placeholder={t.search.placeholder}
+          placeholder={
+            listening
+              ? lang === "ur"
+                ? "سن رہا ہوں... بولیں 🎤"
+                : "Listening... speak now 🎤"
+              : t.search.placeholder
+          }
           className={
             compact
               ? "w-full bg-transparent px-3 py-1.5 text-sm outline-none placeholder:text-muted-foreground"
