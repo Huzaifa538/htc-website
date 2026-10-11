@@ -48,6 +48,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useProduct, useReviews } from "@/components/customer/data-hooks";
 import { WhatsAppOrderButton } from "@/components/customer/whatsapp-order-button";
 import { ArPreview } from "@/components/customer/ar-preview";
+import { Product3DViewer } from "@/components/customer/product-3d-viewer";
 import { useCartStore } from "@/lib/store/cart";
 import { useWishlistStore } from "@/lib/store/wishlist";
 import { useUiStore } from "@/lib/store/ui";
@@ -575,6 +576,13 @@ export default function ProductPage({ id: propId }: { id?: string }) {
                   }
                   quantity={qty}
                 />
+              </div>
+            )}
+
+            {/* 3D viewer — only when the admin enabled it for this product */}
+            {product.show3d && product.model3d && (
+              <div className="mt-3">
+                <Product3DViewer templateId={product.model3d} />
               </div>
             )}
 

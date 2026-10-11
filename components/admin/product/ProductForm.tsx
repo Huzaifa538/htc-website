@@ -40,6 +40,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MODEL_TEMPLATES } from "@/lib/three/models";
 import {
   Select,
   SelectContent,
@@ -451,6 +452,8 @@ export default function ProductForm({
   const watchSku = watch("sku");
   const [featured, setFeatured] = useState(product?.featured ?? false);
   const [published, setPublished] = useState(product?.published ?? true);
+  const [show3d, setShow3d] = useState(product?.show3d ?? false);
+  const [model3d, setModel3d] = useState(product?.model3d ?? "");
 
   useEffect(() => {
     // Auto-generate SKU from name when empty (create mode).
@@ -513,6 +516,8 @@ export default function ProductForm({
         sku: values.sku.trim(),
         tags,
         videoUrl: values.videoUrl?.trim() || null,
+        show3d,
+        model3d: show3d && model3d ? model3d : null,
         featured,
         published,
       };
@@ -707,6 +712,44 @@ export default function ProductForm({
                   <p className="text-base font-bold text-foreground">{product?.rating?.toFixed(1) ?? "0.0"}</p>
                   Rating
                 </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>3D View</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label>Show 3D viewer</Label>
+              <Input
+                type="checkbox"
+                checked={show3d}
+                onChange={(e) => setShow3d(e.target.checked)}
+                className="h-4 w-4 accent-primary"
+              />
+            </div>
+            {show3d && (
+              <div className="space-y-2">
+                <Label>3D model (match the product)</Label>
+                <Select value={model3d} onValueChange={setModel3d}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pick the closest model…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MODEL_TEMPLATES.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Customers see the 3D viewer on the product page only when this
+                  is on. Pick the model that looks most like the product.
+                </p>
               </div>
             )}
           </CardContent>

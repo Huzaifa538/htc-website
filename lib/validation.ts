@@ -128,6 +128,10 @@ export const productSchema = z.object({
   tags: z.array(z.string().trim().min(1).max(60)).max(30),
   /** Demo video URL (YouTube or direct mp4). Optional — empty hides the video section. */
   videoUrl: z.string().trim().max(2000).nullish(),
+  /** 3D viewer toggle — product page shows the 3D viewer only when true. */
+  show3d: z.boolean(),
+  /** 3D model template id (must match lib/three/models.ts). Empty = none. */
+  model3d: z.string().trim().max(60).nullish(),
   featured: z.boolean(),
   published: z.boolean(),
 });

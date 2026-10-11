@@ -68,6 +68,10 @@ export interface Product {
    *  section on the product page when set. Huzaifa uploads the actual demo
    *  videos later; empty means no video section is rendered. */
   videoUrl?: string;
+  /** 3D viewer: shown on the product page only when the admin enables it. */
+  show3d?: boolean;
+  /** 3D model template id (see lib/three/models.ts MODEL_TEMPLATES). */
+  model3d?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
