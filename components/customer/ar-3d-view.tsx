@@ -91,7 +91,7 @@ export function Ar3DView({
     const mount = mountRef.current;
     if (!mount) return;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setClearColor(0x000000, 0);
     renderer.shadowMap.enabled = true;
@@ -190,6 +190,8 @@ export function Ar3DView({
     el.addEventListener("pointerup", onUp);
     el.addEventListener("pointercancel", onUp);
     el.addEventListener("wheel", onWheel, { passive: false });
+    const onDbl = () => { rig.position.set(0, 0, 0); setScale(1); };
+    el.addEventListener("dblclick", onDbl);
 
     apiRef.current = {
       setFinish: (f) => { applyFinish(f); setFinishState(f); },
@@ -228,6 +230,7 @@ export function Ar3DView({
       el.removeEventListener("pointerup", onUp);
       el.removeEventListener("pointercancel", onUp);
       el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("dblclick", onDbl);
       renderer.dispose();
       mount.removeChild(renderer.domElement);
       apiRef.current = null;
@@ -248,6 +251,66 @@ export function Ar3DView({
     setPhotoUrl(null);
     setCamError(false);
     setMode("camera");
+  }
+
+  // snapshot: background (camera frame / photo) + 3D overlay -> PNG share/download
+  const [snapBusy, setSnapBusy] = useState(false);
+  async function takeSnapshot() {
+    const glCanvas = mountRef.current?.querySelector("canvas");
+    if (!glCanvas || snapBusy) return;
+    setSnapBusy(true);
+    try {
+      const w = glCanvas.clientWidth, h = glCanvas.clientHeight;
+      const out = document.createElement("canvas");
+      out.width = w * 2; out.height = h * 2;
+      const ctx = out.getContext("2d");
+      if (!ctx) return;
+      ctx.scale(2, 2);
+
+      const drawCover = (
+        sw: number, sh: number,
+        draw: (dx: number, dy: number, dw: number, dh: number) => void
+      ) => {
+        const s = Math.max(w / sw, h / sh);
+        const dw = sw * s, dh = sh * s;
+        draw((w - dw) / 2, (h - dh) / 2, dw, dh);
+      };
+
+      if (mode === "camera" && videoRef.current && videoRef.current.videoWidth > 0) {
+        const vid = videoRef.current;
+        drawCover(vid.videoWidth, vid.videoHeight, (dx, dy, dw, dh) =>
+          ctx.drawImage(vid, dx, dy, dw, dh)
+        );
+      } else if (mode === "photo" && photoUrl) {
+        const img = new Image();
+        img.src = photoUrl;
+        await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
+        drawCover(img.naturalWidth, img.naturalHeight, (dx, dy, dw, dh) =>
+          ctx.drawImage(img, dx, dy, dw, dh)
+        );
+      } else {
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, w, h);
+      }
+
+      ctx.drawImage(glCanvas, 0, 0, w, h);
+
+      const blob = await new Promise<Blob | null>((res) => out.toBlob(res, "image/png"));
+      if (!blob) return;
+      const file = new File([blob], `htc-ar-${Date.now()}.png`, { type: "image/png" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: productName }).catch(() => {});
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = file.name;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+      }
+    } finally {
+      setSnapBusy(false);
+    }
   }
 
   useEffect(() => {
@@ -335,6 +398,14 @@ export function Ar3DView({
           aria-label="rotate"
         >
           <RotateCcw size={18} className={rotating ? "animate-[spin_3s_linear_infinite]" : ""} />
+        </button>
+        <button
+          onClick={takeSnapshot}
+          disabled={snapBusy}
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-[#D21F26] hover:bg-[#b31a20] disabled:opacity-50"
+          aria-label={v.snapshot ?? "Photo lo"}
+        >
+          <Camera size={18} />
         </button>
         <input ref={photoInputRef} type="file" accept="image/*" hidden onChange={onPhoto} />
       </div>

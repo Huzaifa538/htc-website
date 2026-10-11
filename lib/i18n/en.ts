@@ -577,6 +577,7 @@ export const en = {
     dragHint3d: "3D product ko drag karke rakho",
     usePhoto: "Photo upload karo",
     useCamera: "Camera",
+    snapshot: "Photo lo",
   },
   viewer3d: {
     button: "3D mein dekho",

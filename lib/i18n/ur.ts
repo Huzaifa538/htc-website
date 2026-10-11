@@ -580,6 +580,7 @@ export const ur: Dictionary = {
     dragHint3d: "تھری ڈی پراڈکٹ کو گھسیٹ کر رکھو",
     usePhoto: "تصویر اپ لوڈ کرو",
     useCamera: "کیمرہ",
+    snapshot: "تصویر لو",
   },
   viewer3d: {
     button: "تھری ڈی میں دیکھو",
