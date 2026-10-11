@@ -570,12 +570,13 @@ export const en = {
   },
   ar: {
     title: "AR Preview",
+    title3d: "3D AR Preview",
     close: "Close",
-    button: "AR mein dekho",
+    button: "3D AR mein dekho",
     cameraDenied: "Camera ki permission nahi mili. Browser settings mein camera allow karo aur dobara try karo.",
-    dragHint: "Photo ko drag karo",
-    smaller: "Chhota karo",
-    bigger: "Bara karo",
+    dragHint3d: "3D product ko drag karke rakho",
+    usePhoto: "Photo upload karo",
+    useCamera: "Camera",
   },
   viewer3d: {
     button: "3D mein dekho",

@@ -47,7 +47,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useProduct, useReviews } from "@/components/customer/data-hooks";
 import { WhatsAppOrderButton } from "@/components/customer/whatsapp-order-button";
-import { ArPreview } from "@/components/customer/ar-preview";
+import { Ar3DView } from "@/components/customer/ar-3d-view";
 import { Product3DViewer } from "@/components/customer/product-3d-viewer";
 import { useCartStore } from "@/lib/store/cart";
 import { useWishlistStore } from "@/lib/store/wishlist";
@@ -586,8 +586,8 @@ export default function ProductPage({ id: propId }: { id?: string }) {
               </div>
             )}
 
-            {/* AR preview — camera par product dekho */}
-            {gallery.length > 0 && (
+            {/* 3D AR — camera ya photo par asli 3D model dekho */}
+            {product.show3d && product.model3d && (
               <div className="mt-3">
                 <Button
                   variant="outline"
@@ -597,8 +597,8 @@ export default function ProductPage({ id: propId }: { id?: string }) {
                   <ScanEye size={18} className="mr-2 rtl:ml-2 rtl:mr-0" /> {t.ar.button}
                 </Button>
                 {arOpen && (
-                  <ArPreview
-                    image={gallery[0]}
+                  <Ar3DView
+                    templateId={product.model3d}
                     productName={product.name}
                     onClose={() => setArOpen(false)}
                   />
