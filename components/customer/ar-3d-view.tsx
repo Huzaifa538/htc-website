@@ -158,6 +158,14 @@ export function Ar3DView({
       renderer.domElement.clientHeight;
     const onDown = (e: PointerEvent) => {
       pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      // Keep pointermove flowing to the canvas on touch devices: without
+      // explicit capture some mobile browsers retarget/cancel the stream
+      // mid-drag, which made drag do nothing on phones.
+      try {
+        renderer.domElement.setPointerCapture(e.pointerId);
+      } catch {
+        /* pointer capture unsupported — implicit touch capture applies */
+      }
       if (pts.size === 2) {
         const a = Array.from(pts.values());
         lastPinch = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y);
@@ -175,7 +183,7 @@ export function Ar3DView({
       } else if (pts.size === 2) {
         const a = Array.from(pts.values());
         const d = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y);
-        if (lastPinch > 0 && d > 0) setScale(scale * (lastPinch / d));
+        if (lastPinch > 0 && d > 0) setScale(scale * (d / lastPinch));
         lastPinch = d;
       }
     };
